@@ -9,4 +9,4 @@ TRAIN_SIZE = 0.2
 DF_DIRECTORS = "df/df_with_directors.csv"
 DF_NO_DIRECTORS = "df/df_without_directors.csv"
 # Results
-LINEAR_REGRESSION_MODEL = "bin/main_df_directors_W_3.9887.npy"
+LINEAR_REGRESSION_MODEL = "bin/main_df_directors_W_3.99.npy"

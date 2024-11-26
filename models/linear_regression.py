@@ -160,10 +160,13 @@ def main_df_directors():
                 y_test = df[LABEL_COLUMN].to_numpy()[test_split:]
                 chunk_metrics = metrics(X_test, y_test, W)
                 MSE += chunk_metrics[0]
-                R2 += chunk_metrics[0]
+                R2 += chunk_metrics[1]
     print(
         f"Mean squared error from mini-batch gradient descent linear regression: {MSE/(CHUNKS+1)}"
     )
+    with open("results/directors/linear_regression_results.csv", "w") as F:
+        F.write("Model,MSE,R2\n")
+        F.write(f"SGD,{MSE/(CHUNKS+1)},{R2/(CHUNKS+1)}")
     with open(f"{str(uuid4())}.npy", "wb") as F:
         np.save(F, W)
 
@@ -191,6 +194,6 @@ def test_df_directors_model():
 
 
 if __name__ == "__main__":
-    main_df_no_directors()
+    # main_df_no_directors()
     # main_df_directors()
-    # test_df_directors_model()
+    test_df_directors_model()
