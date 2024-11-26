@@ -145,7 +145,7 @@ def main_df_directors():
                 y_test = df[LABEL_COLUMN].to_numpy()[test_split:]
                 MSE += closed_form_MSE(X_test, y_test, W)
     print(
-        f"Mean squared error from mini-batch gradient descent linear regression: {MSE/(chunks+1)}"
+        f"Mean squared error from mini-batch gradient descent linear regression: {MSE/(CHUNKS+1)}"
     )
     with open(f"{str(uuid4())}.npy", "wb") as F:
         np.save(F, W)
