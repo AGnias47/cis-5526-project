@@ -5,6 +5,7 @@ import numpy as np
 import pandas as pd
 from numpy.linalg import inv
 from rainbow_tqdm import tqdm
+from sklearn.metrics import r2_score
 from sklearn.model_selection import train_test_split
 
 import sys
@@ -21,7 +22,7 @@ from models.constants import (
     ROWS,
     TRAIN_SIZE,
 )
-from models.mse import mse_V
+from models.metrics import mse_V
 
 
 def closed_form_linear_regression(X_train, y_train):
@@ -43,11 +44,11 @@ def closed_form_ridge_regression(X_train, y_train, lambda_val=0.1):
     return np.matmul(XTXI, XTY)
 
 
-def closed_form_MSE(X_test, y_test, W):
+def metrics(X_test, y_test, W):
     X_test = X_test[:, FEATURE_STARTING_INDEX:].astype(np.float64)
     Y_hat_test = np.matmul(X_test, W)
     E_test = y_test - Y_hat_test
-    return mse_V(E_test)
+    return mse_V(E_test), r2_score(y_test, Y_hat_test)
 
 
 def gradient_descent_linear_regression(X_train, y_train, epochs=100, alpha=0.1):
@@ -88,6 +89,8 @@ def mini_batch_gradient_descent_linear_regression(
 
 
 def main_df_no_directors():
+    with open("results/no_dir/linear_regression_results.csv", "w") as F:
+        F.write("Model,MSE,R2\n")
     df = pd.read_csv(DF_NO_DIRECTORS).fillna(0)
     X_train, X_test, y_train, y_test = train_test_split(
         df.drop([LABEL_COLUMN], axis=1, errors="ignore").to_numpy(),
@@ -96,32 +99,43 @@ def main_df_no_directors():
         random_state=RANDOM_STATE,
     )
     W = closed_form_linear_regression(X_train, y_train)
-    MSE = closed_form_MSE(X_test, y_test, W)
-    print(f"Mean squared error from closed form linear regression: {MSE}")
+    mse, r2 = metrics(X_test, y_test, W)
+    print(f"Mean squared error from closed form solution: {mse}")
+    with open("results/no_dir/linear_regression_results.csv", "a") as F:
+        F.write(f"Closed Form,{mse},{r2}\n")
     W = closed_form_ridge_regression(X_train, y_train, lambda_val=0.8)
-    MSE = closed_form_MSE(X_test, y_test, W)
-    print(f"Mean squared error from ridge regression: {MSE}")
+    mse, r2 = metrics(X_test, y_test, W)
+    print(f"Mean squared error from ridge regression: {mse}")
+    with open("results/no_dir/linear_regression_results.csv", "a") as F:
+        F.write(f"Ridge Regression,{mse},{r2}\n")
     W = gradient_descent_linear_regression(X_train, y_train, epochs=1000, alpha=0.1)
-    MSE = closed_form_MSE(X_test, y_test, W)
-    print(f"Mean squared error from batch gradient descent linear regression: {MSE}")
+    mse, r2 = metrics(X_test, y_test, W)
+    print(f"Mean squared error from batch gradient descent linear regression: {mse}")
+    with open("results/no_dir/linear_regression_results.csv", "a") as F:
+        F.write(f"Batch Gradient Descent,{mse},{r2}\n")
     W = mini_batch_gradient_descent_linear_regression(
         X_train, y_train, epochs=10, alpha=0.1
     )
-    MSE = closed_form_MSE(X_test, y_test, W)
+    mse, r2 = metrics(X_test, y_test, W)
     print(
-        f"Mean squared error from mini-batch gradient descent linear regression: {MSE}"
+        f"Mean squared error from mini-batch gradient descent linear regression: {mse}"
     )
+    with open("results/no_dir/linear_regression_results.csv", "a") as F:
+        F.write(f"Mini-batch GD,{mse},{r2}\n")
     W = mini_batch_gradient_descent_linear_regression(
         X_train, y_train, epochs=10, alpha=0.01, batch_size=1
     )
-    MSE = closed_form_MSE(X_test, y_test, W)
-    print(f"Mean squared error from SGD linear regression: {MSE}")
+    mse, r2 = metrics(X_test, y_test, W)
+    print(f"Mean squared error from SGD linear regression: {mse}")
+    with open("results/no_dir/linear_regression_results.csv", "a") as F:
+        F.write(f"SGD,{mse},{r2}\n")
 
 
 def main_df_directors():
     X_test, y_test, W = None, None, None
     epochs = 10
     MSE = 0
+    R2 = 0
     for epoch in tqdm(range(epochs + 1)):
         if epoch == epochs:
             print("Training complete, onto testing")
@@ -144,7 +158,9 @@ def main_df_directors():
                     test_split:, :
                 ]
                 y_test = df[LABEL_COLUMN].to_numpy()[test_split:]
-                MSE += closed_form_MSE(X_test, y_test, W)
+                chunk_metrics = metrics(X_test, y_test, W)
+                MSE += chunk_metrics[0]
+                R2 += chunk_metrics[0]
     print(
         f"Mean squared error from mini-batch gradient descent linear regression: {MSE/(CHUNKS+1)}"
     )
@@ -175,6 +191,6 @@ def test_df_directors_model():
 
 
 if __name__ == "__main__":
-    # main_df_no_directors()
+    main_df_no_directors()
     # main_df_directors()
-    test_df_directors_model()
+    # test_df_directors_model()

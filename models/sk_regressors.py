@@ -13,11 +13,11 @@ from models.constants import (
     DF_NO_DIRECTORS,
     DF_DIRECTORS,
 )
-from models.mse import mse_V
+from models.metrics import mse_V
 
 
 def data_without_directors():
-    df = pd.read_csv(DF_NO_DIRECTORS)
+    df = pd.read_csv(DF_NO_DIRECTORS).fillna(0)
     X_train, X_test, y_train, y_test = train_test_split(
         df.drop([LABEL_COLUMN], axis=1, errors="ignore").to_numpy(),
         df[LABEL_COLUMN].to_numpy(),
@@ -29,26 +29,35 @@ def data_without_directors():
     return X_train, X_test, y_train, y_test
 
 
-def random_forest(X_train, X_test, y_train, y_test, results_fname):
-    for depth in [2, 25, 32, 50, 72, 100, 150, 250, None]:
+def rf_test_depth(X_train, X_test, y_train, y_test, results_fname):
+    with open(results_fname, "w") as F:
+        F.write("Model,MSE,depth\n")
+    for depth in [2,5,9,10,11,12,13,14,15,16,17,21,25,27,29,32,50,72,100,150,250,None]:
         model = RandomForestRegressor(
-            max_depth=depth, random_state=RANDOM_STATE, verbose=1
+            max_depth=depth, random_state=RANDOM_STATE, verbose=1, n_jobs=-1
         )
         model.fit(X_train, y_train)
         Y_hat = model.predict(X_test)
         E = y_test - Y_hat
         MSE = mse_V(E)
-        with open(results_fname, "w") as F:
-            F.write(f"RandomForestRegressor,{MSE},{depth}")
+        with open(results_fname, "a") as F:
+            F.write(f"RandomForestRegressor,{MSE},{depth}\n")
         print(f"RandomForestRegressor,{MSE},{depth}")
 
 
-
-def test_regression_models(X_train, X_test, y_train, y_test, results_fname):
-    with open(results_fname, "w") as F:
-        F.write("Model,MSE,depth\n")
-    random_forest(X_train, X_test, y_train, y_test, results_fname)
+def rf_no_directors_model():
+    X_train, X_test, y_train, y_test = data_without_directors()
+    model = RandomForestRegressor(
+        max_depth=15, random_state=RANDOM_STATE, verbose=1, n_jobs=-1
+    )
+    model.fit(X_train, y_train)
+    Y_hat = model.predict(X_test)
+    E = y_test - Y_hat
+    MSE = mse_V(E)
+    r2 = model.score(X_test, y_test)
+    print(f"MSE: {round(MSE, 2)}, R2: {round(r2, 2)}")
+    return model
 
 
 if __name__ == "__main__":
-    test_regression_models(*data_without_directors(), "results/rf_no_directors.csv")
+    rf_no_directors_model()
