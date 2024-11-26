@@ -21,6 +21,7 @@ from models.constants import (
     ROWS,
     TRAIN_SIZE,
 )
+from models.mse import mse_V
 
 
 def closed_form_linear_regression(X_train, y_train):
@@ -46,7 +47,7 @@ def closed_form_MSE(X_test, y_test, W):
     X_test = X_test[:, FEATURE_STARTING_INDEX:].astype(np.float64)
     Y_hat_test = np.matmul(X_test, W)
     E_test = y_test - Y_hat_test
-    return float((1 / E_test.shape[0]) * np.matmul(E_test.transpose(), E_test))
+    return mse_V(E_test)
 
 
 def gradient_descent_linear_regression(X_train, y_train, epochs=100, alpha=0.1):

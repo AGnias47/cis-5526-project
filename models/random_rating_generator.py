@@ -3,6 +3,7 @@ import pandas as pd
 from sklearn.model_selection import train_test_split
 
 import sys
+
 sys.path.append(".")
 from models.constants import DF_NO_DIRECTORS, LABEL_COLUMN, RANDOM_STATE, TRAIN_SIZE
 

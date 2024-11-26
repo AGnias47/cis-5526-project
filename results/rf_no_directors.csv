@@ -1,0 +1,10 @@
+Model,MSE,Depth
+RandomForestRegressor,1.3522697663612986,2
+RandomForestRegressor,1.0814810185784234,25
+RandomForestRegressor,1.1241024239822919,32
+RandomForestRegressor,1.1462613959326438,50
+RandomForestRegressor,1.1467969977790216,72
+RandomForestRegressor,1.1467969977790216,100
+RandomForestRegressor,1.1467969977790216,150
+RandomForestRegressor,1.1467969977790216,250
+RandomForestRegressor,1.1467969977790216,None
