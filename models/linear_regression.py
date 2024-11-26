@@ -1,4 +1,5 @@
 from math import ceil, floor
+from uuid import uuid4
 
 import numpy as np
 import pandas as pd
@@ -6,10 +7,16 @@ from numpy.linalg import inv
 from rainbow_tqdm import tqdm
 from sklearn.model_selection import train_test_split
 
-from .constants import (
+import sys
+
+sys.path.append(".")
+from models.constants import (
     CHUNKS,
+    DF_DIRECTORS,
+    DF_NO_DIRECTORS,
     FEATURE_STARTING_INDEX,
     LABEL_COLUMN,
+    LINEAR_REGRESSION_MODEL,
     RANDOM_STATE,
     ROWS,
     TRAIN_SIZE,
@@ -80,7 +87,7 @@ def mini_batch_gradient_descent_linear_regression(
 
 
 def main_df_no_directors():
-    df = pd.read_csv("df_1123_2.csv").fillna(0)
+    df = pd.read_csv(DF_NO_DIRECTORS).fillna(0)
     X_train, X_test, y_train, y_test = train_test_split(
         df.drop([LABEL_COLUMN], axis=1, errors="ignore").to_numpy(),
         df[LABEL_COLUMN].to_numpy(),
@@ -118,7 +125,7 @@ def main_df_directors():
         if epoch == epochs:
             print("Training complete, onto testing")
         for chunk in tqdm(
-            pd.read_csv("df_1123.csv", chunksize=ROWS // CHUNKS), total=CHUNKS
+            pd.read_csv(DF_DIRECTORS, chunksize=ROWS // CHUNKS), total=CHUNKS
         ):
             df = chunk.fillna(0)
             if epoch < epochs:
@@ -140,7 +147,7 @@ def main_df_directors():
     print(
         f"Mean squared error from mini-batch gradient descent linear regression: {MSE/(chunks+1)}"
     )
-    with open("main_df_directors_W.npy", "wb") as F:
+    with open(f"{str(uuid4())}.npy", "wb") as F:
         np.save(F, W)
 
 
@@ -159,14 +166,14 @@ def individual_row_test(df, W):
 
 
 def test_df_directors_model():
-    with open("main_df_directors_W_3.9887.npy", "rb") as F:
+    with open(LINEAR_REGRESSION_MODEL, "rb") as F:
         W = np.load(F)
-    for chunk in pd.read_csv("df_1123.csv", chunksize=ROWS // CHUNKS):
+    for chunk in pd.read_csv(DF_DIRECTORS, chunksize=ROWS // CHUNKS):
         individual_row_test(chunk[271:].fillna(0), W)
         break
 
 
 if __name__ == "__main__":
-    # main_df_no_directors()
+    main_df_no_directors()
     # main_df_directors()
-    test_df_directors_model()
+    # test_df_directors_model()

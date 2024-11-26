@@ -2,7 +2,9 @@ import numpy as np
 import pandas as pd
 from sklearn.model_selection import train_test_split
 
-from models.constants import LABEL_COLUMN, RANDOM_STATE, TRAIN_SIZE
+import sys
+sys.path.append(".")
+from models.constants import DF_NO_DIRECTORS, LABEL_COLUMN, RANDOM_STATE, TRAIN_SIZE
 
 
 def test_MSE(Y):
@@ -13,7 +15,7 @@ def test_MSE(Y):
 
 if __name__ == "__main__":
     np.random.seed(RANDOM_STATE)
-    df = pd.read_csv("df_1123_2.csv").fillna(0)
+    df = pd.read_csv(DF_NO_DIRECTORS).fillna(0)
     _, _, _, y_test = train_test_split(
         df.drop([LABEL_COLUMN], axis=1, errors="ignore").to_numpy(),
         df[LABEL_COLUMN].to_numpy(),
