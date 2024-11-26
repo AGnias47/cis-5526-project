@@ -1,0 +1,68 @@
+Movie,Predicted Rating,Actual Rating,Error
+2 Fast 2 Furious,5.1,5.9,0.8
+Big Fish,7.2,8.0,0.8
+Silent Hill,3.6,6.5,2.9
+The Da Vinci Code,4.6,6.6,2.0
+Solaris,7.3,7.9,0.6
+The Terminal,10.2,7.4,2.8
+To Kill a Mockingbird,5.6,8.3,2.7
+The Grapes of Wrath,4.6,8.1,3.5
+Titanic,7.1,7.9,0.8
+City of God,5.0,8.6,3.6
+Sunset Boulevard,5.3,8.4,3.1
+Full Metal Jacket,6.3,8.2,1.9
+E.T. the Extra-Terrestrial,6.3,7.9,1.6
+Independence Day,5.6,7.0,1.4
+The Matrix,4.4,8.7,4.3
+The Matrix Reloaded,4.4,7.2,2.8
+The Matrix Revolutions,4.4,6.7,2.3
+Out of Africa,6.6,7.1,0.5
+Men in Black,6.6,7.3,0.7
+Men in Black II,6.5,6.2,0.3
+Munich,8.5,7.5,1.0
+Downfall,6.9,8.2,1.3
+Wild Strawberries,7.0,8.1,1.1
+The Last Samurai,6.1,7.8,1.7
+Wild Things,6.1,6.6,0.5
+The Bodyguard,7.2,6.4,0.8
+Ghostbusters,6.8,7.8,1.0
+Grease,7.0,7.2,0.2
+The Ninth Gate,4.5,6.7,2.2
+A Fish Called Wanda,4.9,7.5,2.6
+The Killing Fields,6.3,7.8,1.5
+Trainspotting,4.9,8.1,3.2
+Interview with the Vampire,6.9,7.5,0.6
+The Usual Suspects,6.1,8.5,2.4
+Stalag 17,9.1,7.9,1.2
+Bridget Jones's Diary,8.3,6.8,1.5
+When Harry Met Sally...,8.4,7.7,0.7
+Catch Me If You Can,7.7,8.1,0.4
+Requiem for a Dream,5.4,8.3,2.9
+Battleship Potemkin,6.2,7.9,1.7
+Dr. No,4.8,7.2,2.4
+Belle de Jour,6.7,7.6,0.9
+Troy,6.0,7.3,1.3
+Nosferatu: A Symphony of Horror,3.3,7.8,4.5
+Paris, Texas,5.2,8.1,2.9
+From Russia with Love,4.8,7.3,2.5
+Goldfinger,5.8,7.7,1.9
+The Tin Drum,6.0,7.4,1.4
+Thunderball,5.3,6.9,1.6
+The Marriage of Maria Braun,4.7,7.7,3.0
+Saw IV,6.0,5.9,0.1
+Twister,5.4,6.5,1.1
+Central Station,4.3,8.0,3.7
+You Only Live Twice,4.9,6.8,1.9
+On Her Majesty's Secret Service,5.6,6.7,1.1
+Oldboy,6.7,8.3,1.6
+Harry Potter and the Sorcerer's Stone,5.1,7.6,2.5
+Harry Potter and the Chamber of Secrets,5.2,7.4,2.2
+Harry Potter and the Prisoner of Azkaban,5.4,7.9,2.5
+Harry Potter and the Goblet of Fire,5.2,7.7,2.5
+Harry Potter and the Order of the Phoenix,6.0,7.5,1.5
+Pearl Harbor,7.8,6.2,1.6
+Out of the Past,6.1,8.0,1.9
+Pulp Fiction,6.1,8.9,2.8
+Diamonds Are Forever,5.6,6.5,0.9
+The Man with the Golden Gun,5.7,6.7,1.0
+Contact,7.9,7.5,0.4

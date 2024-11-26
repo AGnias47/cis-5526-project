@@ -1,0 +1,56 @@
+import json
+import pathlib
+
+import pandas as pd
+import tqdm
+from bs4 import BeautifulSoup
+
+from limiting_retrying_session import limiting_retrying_session
+
+
+def get_movie_data(imdb_id, session):
+    filepath = f"cache/{imdb_id}.json"
+    if pathlib.Path(filepath).exists():
+        with open(filepath) as F:
+            data = json.load(F)
+    else:
+        data = json.loads(
+            BeautifulSoup(
+                session.get(f"https://www.imdb.com/title/{imdb_id}").text, "html.parser"
+            )
+            .find("script", type="application/ld+json")
+            .text
+        )
+        with open(f"cache/{imdb_id}.json", "w") as F:
+            json.dump(data, F)
+    return data
+
+
+def scrape_imdb_data(df, session):
+    for i, row in tqdm.tqdm(df.iloc[0:].iterrows()):
+        data = get_movie_data(row.imdbId, session)
+        try:
+            df.loc[i, "director"] = data.get("director")[0].get("name")
+        except Exception as e:
+            print(f"Error parsing director for {df.title}: {e}")
+            pass
+        try:
+            df.loc[i, "runtime"] = data.get("duration", 0)
+        except Exception as e:
+            print(f"Error parsing runtime for {df.title}: {e}")
+            pass
+        try:
+            df.loc[i, "contentRating"] = data.get("contentRating")
+        except Exception as e:
+            print(f"Error parsing contentRating for {df.title}: {e}")
+            pass
+        if i % 100:
+            df.to_csv("backup.csv")
+    return df
+
+
+if __name__ == "__main__":
+    session = limiting_retrying_session()
+    df = pd.read_csv("backup.csv")
+    df = scrape_imdb_data(df, session)
+    df.to_csv("df.csv")

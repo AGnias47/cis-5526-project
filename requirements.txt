@@ -1,0 +1,6 @@
+beautifulsoup4==4.12.3
+isodate==0.7.2
+pandas==2.2.2
+requests==2.32.3
+requests_ratelimiter==0.7.0
+tqdm==4.67.0
