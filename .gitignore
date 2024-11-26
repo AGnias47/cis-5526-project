@@ -168,5 +168,5 @@ raw_data/
 backups/
 cache/
 backup.csv
-df*.csv
+df/
 bin

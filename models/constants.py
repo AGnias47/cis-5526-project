@@ -6,7 +6,7 @@ RANDOM_STATE = 42
 ROWS = 60941
 TRAIN_SIZE = 0.2
 # Dataframes
-DF_DIRECTORS = "df_1123.csv"
-DF_NO_DIRECTORS = "df_1123_2.csv"
+DF_DIRECTORS = "df/df_1123.csv"
+DF_NO_DIRECTORS = "df/df_1123_2.csv"
 # Results
 LINEAR_REGRESSION_MODEL = "bin/main_df_directors_W_3.9887.npy"

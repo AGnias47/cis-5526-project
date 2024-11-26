@@ -174,6 +174,6 @@ def test_df_directors_model():
 
 
 if __name__ == "__main__":
-    main_df_no_directors()
-    # main_df_directors()
-    # test_df_directors_model()
+    #main_df_no_directors()
+    #main_df_directors()
+    test_df_directors_model()
