@@ -16,8 +16,8 @@ from models.constants import (
 from models.metrics import mse_V
 
 
-def data_without_directors():
-    df = pd.read_csv(DF_NO_DIRECTORS).fillna(0)
+def data(df_raw=DF_NO_DIRECTORS):
+    df = pd.read_csv(df_raw).fillna(0)
     X_train, X_test, y_train, y_test = train_test_split(
         df.drop([LABEL_COLUMN], axis=1, errors="ignore").to_numpy(),
         df[LABEL_COLUMN].to_numpy(),
@@ -45,10 +45,10 @@ def rf_test_depth(X_train, X_test, y_train, y_test, results_fname):
         print(f"RandomForestRegressor,{MSE},{depth}")
 
 
-def rf_no_directors_model():
-    X_train, X_test, y_train, y_test = data_without_directors()
+def rf_no_directors_model(results_fname, df=DF_NO_DIRECTORS, depth=15):
+    X_train, X_test, y_train, y_test = data(df)
     model = RandomForestRegressor(
-        max_depth=15, random_state=RANDOM_STATE, verbose=1, n_jobs=-1
+        max_depth=depth, random_state=RANDOM_STATE, verbose=1, n_jobs=-1
     )
     model.fit(X_train, y_train)
     Y_hat = model.predict(X_test)
@@ -56,8 +56,10 @@ def rf_no_directors_model():
     MSE = mse_V(E)
     r2 = model.score(X_test, y_test)
     print(f"MSE: {round(MSE, 2)}, R2: {round(r2, 2)}")
+    with open(results_fname, "a") as F:
+        F.write(f"RandomForestRegressor,{MSE},{depth}\n")
     return model
 
 
 if __name__ == "__main__":
-    rf_no_directors_model()
+    rf_no_directors_model(results_fname="results/directors/rf.csv", df=DF_DIRECTORS)
