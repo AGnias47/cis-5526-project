@@ -8,4 +8,5 @@ rainbow_tqdm==0.1.5
 requests==2.32.3
 requests-ratelimiter==0.7.0
 scikit-learn==1.5.2
+torch==2.5.1+cu121
 tqdm==4.67.0
