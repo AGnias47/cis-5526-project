@@ -79,23 +79,22 @@ def rf(results_fname, df=DF_NO_DIRECTORS, depth=15):
     MSE, r2 = run_model(model, X_train, X_test, y_train, y_test)
     print(f"MSE: {round(MSE, 2)}, R2: {round(r2, 2)}")
     with open(results_fname, "a") as F:
-        F.write(f"Model,MSE,R2,depth\n")
         F.write(f"RandomForestRegressor,{MSE},{r2},{depth}\n")
     return model
 
 
 def svr(results_fname, df=DF_NO_DIRECTORS):
     X_train, X_test, y_train, y_test = data(df)
+    degree = 3
     C = 1.0
     epsilon = 0.1
     model = SVR(
-        kernel="rbf", degree=3, C=1.0, epsilon=0.1, verbose=True, cache_size=4096
+        kernel="rbf", degree=degree, C=C, epsilon=epsilon, verbose=True, cache_size=4096
     )
     MSE, r2 = run_model(model, X_train, X_test, y_train, y_test)
     print(f"MSE: {round(MSE, 2)}, R2: {round(r2, 2)}")
     with open(results_fname, "a") as F:
-        F.write(f"Model,MSE,R2,C,Epsilon\n")
-        F.write(f"SVR,{MSE},{r2},{C},{epsilon}\n")
+        F.write(f"SVR,{MSE},{r2},{degree},{C},{epsilon}\n")
     return model
 
 
