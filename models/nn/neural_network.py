@@ -6,6 +6,7 @@ https://pytorch.org/docs/stable/optim.html
 https://pytorch.org/docs/stable/generated/torch.optim.Adam.html
 https://github.com/AGnias47/brats-challenge-cis-5528/blob/main/nn/nnet.py
 https://pytorch.org/torcheval/main/generated/torcheval.metrics.R2Score.html
+https://piexchange.medium.com/decoding-deep-learning-neural-networks-for-regression-part-i-332f1d2fedd5#:~:text=The%20number%20of%20neurons%20in,considered%20a%20deep%20neural%20network.
 HW 5/6
 """
 

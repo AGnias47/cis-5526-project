@@ -1,6 +1,8 @@
 """
 https://pytorch.org/tutorials/beginner/basics/data_tutorial.html
 https://pytorch.org/docs/stable/data.html
+https://stackoverflow.com/a/50308132/8728749 - converting numpy to tensor
+https://stackoverflow.com/a/67456436/8728749 - datatype errors
 """
 
 import torch
