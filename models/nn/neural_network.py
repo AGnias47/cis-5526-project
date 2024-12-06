@@ -34,7 +34,7 @@ class FeedforwardNeuralNetwork(nn.Module):
         self.fc1 = nn.Linear(in_features=62, out_features=45)
         self.fc2 = nn.Linear(in_features=45, out_features=12)
         self.fc3 = nn.Linear(in_features=12, out_features=1)
-        self.alpha = 0.01
+        self.alpha = 0.001
         self.gamma = 0.9
         self.loss_function = nn.MSELoss()
 
@@ -72,7 +72,7 @@ def train(model, device, dataloader, epochs=10):
             epoch_loss += loss.item()
         scheduler.step()
         epoch_loss = epoch_loss / len(dataloader)
-        print(f"Epoch {epoch+1} complete. Loss: {round(epochs, 5)}")
+        print(f"Epoch {epoch+1} complete. Loss: {round(epoch_loss, 5)}")
         total_loss.append(epoch_loss)
     return min(total_loss)
 
@@ -101,7 +101,7 @@ if __name__ == "__main__":
     device = torch.device("cuda")
     model = FeedforwardNeuralNetwork().to(device)
     train_dataloader, test_dataloader, validation_dataloader = train_test_val()
-    training_loss = train(model, device, train_dataloader, epochs=1)
+    training_loss = train(model, device, train_dataloader, epochs=25)
     print(f"Lowest training loss: {training_loss}")
     mse, r2 = test(model, device, validation_dataloader)
     print(f"MSE: {mse}, R2: {r2}")
