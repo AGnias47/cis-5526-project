@@ -13,21 +13,26 @@ from uuid import uuid4
 import torch
 import torch.nn.functional as F
 import torch.nn as nn
-from torch.utils.data import DataLoader
 from torch.optim import Adam
 from torch.optim.lr_scheduler import ExponentialLR
 from rainbow_tqdm import tqdm
-from constants import RANDOM_STATE
 from torcheval.metrics import R2Score
 from imdb_dataset import train_test_val
+
+import sys
+
+sys.path.append(".")
+from models.constants import RANDOM_STATE
+
 torch.manual_seed(RANDOM_STATE)
 
 
 class FeedforwardNeuralNetwork(nn.Module):
     def __init__(self):
         super(FeedforwardNeuralNetwork, self).__init__()
-        self.fc1 = nn.Linear(in_features=36, out_features=12)
-        self.fc2 = nn.Linear(in_features=12, out_features=1)
+        self.fc1 = nn.Linear(in_features=62, out_features=45)
+        self.fc2 = nn.Linear(in_features=45, out_features=12)
+        self.fc3 = nn.Linear(in_features=12, out_features=1)
         self.alpha = 0.01
         self.gamma = 0.9
         self.loss_function = nn.MSELoss()
@@ -35,6 +40,7 @@ class FeedforwardNeuralNetwork(nn.Module):
     def forward(self, x):
         x = F.relu(self.fc1(x))
         x = F.relu(self.fc2(x))
+        x = F.relu(self.fc3(x))
         return x
 
     def save(self, filename=None):
@@ -50,7 +56,7 @@ def train(model, device, dataloader, epochs=10):
     model.train()
     optimizer = Adam(model.parameters(), lr=model.alpha)
     scheduler = ExponentialLR(optimizer, gamma=model.gamma)
-    total_loss = 0
+    total_loss = []
     for epoch in tqdm(range(epochs)):
         epoch_loss = 0
         for X, rating in dataloader:
@@ -66,11 +72,11 @@ def train(model, device, dataloader, epochs=10):
         scheduler.step()
         epoch_loss = epoch_loss / len(dataloader)
         print(f"Epoch {epoch+1} complete. Loss: {round(epochs, 5)}")
-        total_loss += epoch_loss
-    return total_loss
+        total_loss.append(epoch_loss)
+    return min(total_loss)
 
 
-def test(model, device, dataloader):
+def test(model, dataloader):
     model.eval()
     mse = 0
     r2_score = R2Score()
@@ -90,4 +96,9 @@ if __name__ == "__main__":
             "CUDA not detected; not running Neural Net training without a GPU configured"
         )
     device = torch.device("cuda")
-    model = FeedforwardNeuralNetwork()
+    model = FeedforwardNeuralNetwork().to(device)
+    train_dataloader, test_dataloader, validation_dataloader = train_test_val()
+    training_loss = train(model, device, train_dataloader, epochs=1)
+    print(f"Lowest training loss: {training_loss}")
+    mse, r2 = test(model, validation_dataloader)
+    print(f"MSE: {mse}, R2: {r2}")
