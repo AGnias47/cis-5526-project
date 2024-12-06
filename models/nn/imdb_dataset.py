@@ -6,8 +6,8 @@ https://pytorch.org/docs/stable/data.html
 import torch
 from torch.utils.data import Dataset, DataLoader, random_split
 
-import pandas as pd
 import numpy as np
+import pandas as pd
 import sys
 
 sys.path.append(".")
@@ -33,7 +33,7 @@ class IMDBDataset(Dataset):
         return len(self.Y)
 
     def __getitem__(self, item):
-        return self.X[item, FEATURE_STARTING_INDEX:].astype(np.float64), self.Y[item]
+        return torch.tensor(self.X[item, FEATURE_STARTING_INDEX:].astype(np.float32)), torch.tensor(self.Y[item].astype(np.float32))
 
     def get_title(self, item):
         return self.X[item, 1]

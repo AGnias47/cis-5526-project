@@ -59,12 +59,12 @@ def train(model, device, dataloader, epochs=10):
     total_loss = []
     for epoch in tqdm(range(epochs)):
         epoch_loss = 0
-        for X, rating in dataloader:
+        for X, Y in dataloader:
             X = X.to(device)
-            rating = rating.to(device)
+            Y = Y.to(device)
             with torch.set_grad_enabled(True):
-                prediction = model(X)
-                loss = model.loss_function(prediction, rating)
+                prediction = model(X).flatten()
+                loss = model.loss_function(prediction, Y)
                 optimizer.zero_grad()
                 loss.backward()
                 optimizer.step()
@@ -76,15 +76,17 @@ def train(model, device, dataloader, epochs=10):
     return min(total_loss)
 
 
-def test(model, dataloader):
+def test(model, device, dataloader):
     model.eval()
     mse = 0
-    r2_score = R2Score()
+    r2_score = R2Score(device=device)
     with torch.no_grad():
-        for X, rating in dataloader:
-            prediction = model(X)
-            mse += model.loss_function(prediction, rating)
-            r2_score.update(prediction, rating)
+        for X, Y in dataloader:
+            X = X.to(device)
+            Y = Y.to(device)
+            prediction = model(X).flatten()
+            mse += model.loss_function(prediction, Y)
+            r2_score.update(prediction, Y)
     mse = mse / len(dataloader)
     r2 = r2_score.compute()
     return mse, r2
@@ -100,5 +102,5 @@ if __name__ == "__main__":
     train_dataloader, test_dataloader, validation_dataloader = train_test_val()
     training_loss = train(model, device, train_dataloader, epochs=1)
     print(f"Lowest training loss: {training_loss}")
-    mse, r2 = test(model, validation_dataloader)
+    mse, r2 = test(model, device, validation_dataloader)
     print(f"MSE: {mse}, R2: {r2}")
