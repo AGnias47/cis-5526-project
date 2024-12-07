@@ -10,16 +10,16 @@ https://piexchange.medium.com/decoding-deep-learning-neural-networks-for-regress
 HW 5/6
 """
 
+import sys
 from uuid import uuid4
+
 import torch
-import torch.nn.functional as F
 import torch.nn as nn
+import torch.nn.functional as F
+from rainbow_tqdm import tqdm
 from torch.optim import Adam
 from torch.optim.lr_scheduler import ExponentialLR
-from rainbow_tqdm import tqdm
-from torcheval.metrics import R2Score, MeanSquaredError
-
-import sys
+from torcheval.metrics import MeanSquaredError, R2Score
 
 sys.path.append(".")
 from models.constants import PRECISION, RANDOM_STATE
@@ -103,7 +103,9 @@ if __name__ == "__main__":
         )
     device = torch.device("cuda")
     model = FeedforwardNeuralNetwork().to(device)
-    train_dataloader, test_dataloader, validation_dataloader = train_test_val(batch_size=BATCH_SIZE)
+    train_dataloader, test_dataloader, validation_dataloader = train_test_val(
+        batch_size=BATCH_SIZE
+    )
     training_loss = train(model, device, train_dataloader, epochs=EPOCHS)
     print(f"Lowest training loss: {training_loss}")
     mse, r2 = test(model, device, validation_dataloader)

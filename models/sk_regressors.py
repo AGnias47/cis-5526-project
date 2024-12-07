@@ -1,18 +1,19 @@
+import sys
+
 import numpy as np
 import pandas as pd
 from sklearn.ensemble import RandomForestRegressor
 from sklearn.model_selection import train_test_split
 from sklearn.svm import SVR
-import sys
 
 sys.path.append(".")
 from models.constants import (
-    LABEL_COLUMN,
-    TRAIN_SIZE,
-    RANDOM_STATE,
-    FEATURE_STARTING_INDEX,
-    DF_NO_DIRECTORS,
     DF_DIRECTORS,
+    DF_NO_DIRECTORS,
+    FEATURE_STARTING_INDEX,
+    LABEL_COLUMN,
+    RANDOM_STATE,
+    TRAIN_SIZE,
 )
 from models.metrics import mse_V
 

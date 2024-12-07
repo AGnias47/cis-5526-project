@@ -5,19 +5,19 @@ https://stackoverflow.com/a/50308132/8728749 - converting numpy to tensor
 https://stackoverflow.com/a/67456436/8728749 - datatype errors
 """
 
-import torch
-from torch.utils.data import Dataset, DataLoader, random_split
+import sys
 
 import numpy as np
 import pandas as pd
-import sys
+import torch
+from torch.utils.data import DataLoader, Dataset, random_split
 
 sys.path.append(".")
 from models.constants import (
-    DF_NO_DIRECTORS,
     DF_DIRECTORS,
-    LABEL_COLUMN,
+    DF_NO_DIRECTORS,
     FEATURE_STARTING_INDEX,
+    LABEL_COLUMN,
     RANDOM_STATE,
 )
 
@@ -35,13 +35,17 @@ class IMDBDataset(Dataset):
         return len(self.Y)
 
     def __getitem__(self, item):
-        return torch.tensor(self.X[item, FEATURE_STARTING_INDEX:].astype(np.float32)), torch.tensor(self.Y[item].astype(np.float32))
+        return torch.tensor(
+            self.X[item, FEATURE_STARTING_INDEX:].astype(np.float32)
+        ), torch.tensor(self.Y[item].astype(np.float32))
 
     def get_title(self, item):
         return self.X[item, 1]
 
 
-def train_test_val(train_size=0.7, test_size=0.15, val_size=0.15, batch_size=64, directors=False):
+def train_test_val(
+    train_size=0.7, test_size=0.15, val_size=0.15, batch_size=64, directors=False
+):
     train, test, val = random_split(
         IMDBDataset(directors),
         [train_size, test_size, val_size],

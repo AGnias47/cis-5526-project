@@ -1,14 +1,13 @@
 import argparse
+import sys
 from math import ceil, floor
-from uuid import uuid4
 
 import numpy as np
 import pandas as pd
 from numpy.linalg import inv
 from rainbow_tqdm import tqdm
 from sklearn.model_selection import train_test_split
-
-import sys
+from torcheval.metrics import MeanSquaredError, R2Score
 
 sys.path.append(".")
 from models.constants import (
@@ -18,12 +17,13 @@ from models.constants import (
     FEATURE_STARTING_INDEX,
     LABEL_COLUMN,
     LINEAR_REGRESSION_MODEL,
+    PRECISION,
     RANDOM_STATE,
     ROWS,
     SAVED_MODELS_DIR,
     TRAIN_VAL_SIZE,
 )
-from models.metrics import mse_r2_V
+from models.metrics import mse_r2_batched_V, mse_r2_V
 
 LINEAR_REGRESSION_RESULTS = "results/linear_regression_results.csv"
 
@@ -101,50 +101,6 @@ def main_df_no_directors():
     return X_train, X_test, X_validation, y_train, y_test, y_validation
 
 
-def main_df_directors():
-    X_test, y_test, W = None, None, None
-    epochs = 10
-    MSE = 0
-    R2 = 0
-    for epoch in tqdm(range(epochs + 1)):
-        if epoch == epochs:
-            print("Training complete, onto testing")
-        for chunk in tqdm(
-            pd.read_csv(DF_DIRECTORS, chunksize=ROWS // CHUNKS), total=CHUNKS
-        ):
-            df = chunk.fillna(0)
-            if epoch < epochs:
-                train_split = floor(df.shape[0] * 0.7)
-                X_train = df.drop([LABEL_COLUMN], axis=1, errors="ignore").to_numpy()[
-                    0:train_split, :
-                ]
-                y_train = df[LABEL_COLUMN].to_numpy()[0:train_split]
-                W = mini_batch_gradient_descent_linear_regression(
-                    X_train, y_train, epochs=1, alpha=0.1, W=W
-                )
-            else:
-                test_val_split = ceil(df.shape[0] * 0.7)
-                X_test_val = df.drop([LABEL_COLUMN], axis=1, errors="ignore").to_numpy()[
-                    test_val_split:, :
-                ]
-                val_split = ceil(X_test_val.shape[0] * 0.5)
-                X_val = df.drop([LABEL_COLUMN], axis=1, errors="ignore").to_numpy()[
-                             val_split:, :
-                             ]
-                y_val = df[LABEL_COLUMN].to_numpy()[val_split:]
-                chunk_metrics = mse_r2_V(X_val, y_val, W)
-                MSE += chunk_metrics[0]
-                R2 += chunk_metrics[1]
-    print(
-        f"Mean squared error from mini-batch gradient descent linear regression: {MSE/(CHUNKS+1)}"
-    )
-    with open("results/directors/linear_regression_results.csv", "w") as F:
-        F.write("Model,MSE,R2\n")
-        F.write(f"SGD,{MSE/(CHUNKS+1)},{R2/(CHUNKS+1)}")
-    with open(f"{str(uuid4())}.npy", "wb") as F:
-        np.save(F, W)
-
-
 def individual_row_test(df, W):
     X_test_all = df.drop([LABEL_COLUMN], axis=1, errors="ignore").to_numpy()
     X_test = X_test_all[:, FEATURE_STARTING_INDEX:].astype(np.float64)
@@ -159,7 +115,7 @@ def individual_row_test(df, W):
             )
 
 
-def test_df_directors_model():
+def df_directors_sample():
     with open(LINEAR_REGRESSION_MODEL, "rb") as F:
         W = np.load(F)
     for chunk in pd.read_csv(DF_DIRECTORS, chunksize=ROWS // CHUNKS):
@@ -191,6 +147,45 @@ def train():
             np.save(F, W)
 
 
+def train_directors():
+    X_test, y_test, W = None, None, None
+    epochs = 10
+    MSE = MeanSquaredError()
+    R2 = R2Score()
+    for epoch in tqdm(range(epochs + 1)):
+        if epoch == epochs:
+            print("Training complete, onto validation")
+        for chunk in tqdm(
+            pd.read_csv(DF_DIRECTORS, chunksize=ROWS // CHUNKS), total=CHUNKS
+        ):
+            df = chunk.fillna(0)
+            if epoch < epochs:
+                train_split = floor(df.shape[0] * 0.7)
+                X_train = df.drop([LABEL_COLUMN], axis=1, errors="ignore").to_numpy()[
+                    0:train_split, :
+                ]
+                y_train = df[LABEL_COLUMN].to_numpy()[0:train_split]
+                W = mini_batch_gradient_descent_linear_regression(
+                    X_train, y_train, epochs=1, alpha=0.1, W=W
+                )
+            else:
+                test_val_split = ceil(df.shape[0] * 0.7)
+                X_test_val = df.drop(
+                    [LABEL_COLUMN], axis=1, errors="ignore"
+                ).to_numpy()[test_val_split:, :]
+                val_split = floor(X_test_val.shape[0] * 0.5)
+                X_val = df.drop([LABEL_COLUMN], axis=1, errors="ignore").to_numpy()[
+                    val_split:, :
+                ]
+                y_val = df[LABEL_COLUMN].to_numpy()[val_split:]
+                MSE, R2 = mse_r2_batched_V(X_val, y_val, W, MSE, R2)
+    mse_total = round(float(MSE.compute()), PRECISION)
+    r2_total = round(float(R2.compute()), PRECISION)
+    print(f"Results for director linear regression: MSE: {mse_total}, R2: {r2_total}")
+    with open(f"{SAVED_MODELS_DIR}/W_director.npy", "wb") as F:
+        np.save(F, W)
+
+
 def test():
     with open(LINEAR_REGRESSION_RESULTS, "w") as F:
         F.write("Data,Model,MSE,R2\n")
@@ -212,9 +207,34 @@ def test():
             )
 
 
+def test_directors():
+    MSE = MeanSquaredError()
+    R2 = R2Score()
+    with open(f"{SAVED_MODELS_DIR}/W_director.npy", "rb") as F:
+        W = np.load(F)
+    for chunk in tqdm(
+        pd.read_csv(DF_DIRECTORS, chunksize=ROWS // CHUNKS), total=CHUNKS
+    ):
+        df = chunk.fillna(0)
+        test_val_split = ceil(df.shape[0] * 0.7)
+        X_test_val = df.drop([LABEL_COLUMN], axis=1, errors="ignore").to_numpy()[
+            test_val_split:, :
+        ]
+        test_split = ceil(X_test_val.shape[0] * 0.5)
+        X_test = df.drop([LABEL_COLUMN], axis=1, errors="ignore").to_numpy()[
+            test_split:, :
+        ]
+        y_test = df[LABEL_COLUMN].to_numpy()[test_split:]
+        MSE, R2 = mse_r2_batched_V(X_test, y_test, W, MSE, R2)
+    mse_total = round(float(MSE.compute()), PRECISION)
+    r2_total = round(float(R2.compute()), PRECISION)
+    print(f"Results for director linear regression: MSE: {mse_total}, R2: {r2_total}")
+    with open(LINEAR_REGRESSION_RESULTS, "a") as F:
+        F.write(f"Dir,LinearRegressionChunked,{mse_total},{r2_total}")
+
+
 if __name__ == "__main__":
     arg_parser = argparse.ArgumentParser()
-    arg_parser.add_argument("-a", "--all", action="store_true", help="Run all actions")
     arg_parser.add_argument(
         "-tr",
         "--train",
@@ -225,18 +245,22 @@ if __name__ == "__main__":
         "--test", action="store_true", help="Test the dataframe without directors"
     )
     arg_parser.add_argument(
-        "-c",
-        "--chunked",
+        "-d",
+        "--directors",
         action="store_true",
-        help="Train and test the dataframe with directors",
+        help="Include the dataframe with directors. Must be used with train or test",
     )
     args = arg_parser.parse_args()
-    if not any([args.all, args.train, args.test, args.chunked]):
+    if not any([args.train, args.test]) or (
+        args.directors and not any([args.train, args.test])
+    ):
         arg_parser.print_help()
-    if args.all or args.train:
+    if args.train:
         train()
-    if args.all or args.test:
+        if args.directors:
+            train_directors()
+    if args.test:
         test()
-    if args.all or args.chunked:
-        main_df_directors()
-        test_df_directors_model()
+        if args.directors:
+            test_directors()
+            df_directors_sample()

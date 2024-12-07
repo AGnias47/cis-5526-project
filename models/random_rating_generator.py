@@ -1,9 +1,9 @@
+import sys
+
 import numpy as np
 import pandas as pd
 from sklearn.metrics import r2_score
 from sklearn.model_selection import train_test_split
-
-import sys
 
 sys.path.append(".")
 from models.constants import DF_NO_DIRECTORS, LABEL_COLUMN, RANDOM_STATE, TRAIN_SIZE
@@ -12,7 +12,9 @@ from models.constants import DF_NO_DIRECTORS, LABEL_COLUMN, RANDOM_STATE, TRAIN_
 def metrics(Y):
     Y_hat = 9 * np.random.rand(Y.shape[0]) + 1
     E_test = Y - Y_hat
-    return float((1 / E_test.shape[0]) * np.matmul(E_test.transpose(), E_test)), r2_score(Y, Y_hat)
+    return float(
+        (1 / E_test.shape[0]) * np.matmul(E_test.transpose(), E_test)
+    ), r2_score(Y, Y_hat)
 
 
 if __name__ == "__main__":
