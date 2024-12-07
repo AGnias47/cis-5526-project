@@ -6,7 +6,7 @@ import tqdm
 from bs4 import BeautifulSoup
 
 from limiting_retrying_session import limiting_retrying_session
-
+from sentiment_analysis_model import SentimentAnalysisModel
 
 def get_movie_data(imdb_id, session):
     filepath = f"cache/{imdb_id}.json"
@@ -26,7 +26,7 @@ def get_movie_data(imdb_id, session):
     return data
 
 
-def scrape_imdb_data(df, session):
+def scrape_imdb_data(df, session, sentiment_analysis_model):
     for i, row in tqdm.tqdm(df.iloc[0:].iterrows()):
         data = get_movie_data(row.imdbId, session)
         try:
@@ -44,6 +44,11 @@ def scrape_imdb_data(df, session):
         except Exception as e:
             print(f"Error parsing contentRating for {df.title}: {e}")
             pass
+        try:
+            df.loc[i, "sa_desc"] = sentiment_analysis_model.classify(data.get("description"))
+        except Exception as e:
+            print(f"Error parsing contentRating for {df.title}: {e}")
+            pass
         if i % 100:
             df.to_csv("backup.csv")
     return df
@@ -51,6 +56,7 @@ def scrape_imdb_data(df, session):
 
 if __name__ == "__main__":
     session = limiting_retrying_session()
-    df = pd.read_csv("backup.csv")
-    df = scrape_imdb_data(df, session)
+    sentiment_analysis_model = SentimentAnalysisModel()
+    df = pd.read_csv("df/raw.csv")
+    df = scrape_imdb_data(df, session, sentiment_analysis_model)
     df.to_csv("df.csv")
