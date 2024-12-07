@@ -1,36 +1,37 @@
+"""
+https://stackoverflow.com/a/20662980/8728749
+"""
+
 import sys
+import argparse
+import pathlib
 
 import numpy as np
-import pandas as pd
 from sklearn.ensemble import RandomForestRegressor
-from sklearn.model_selection import train_test_split
 from sklearn.svm import SVR
 
 sys.path.append(".")
 from models.constants import (
-    DF_DIRECTORS,
-    DF_NO_DIRECTORS,
     FEATURE_STARTING_INDEX,
-    LABEL_COLUMN,
     RANDOM_STATE,
-    TRAIN_SIZE,
+    SAVED_MODELS_DIR,
+    RESULTS_FILE,
 )
+import pickle
 from models.metrics import mse_V
+from models.data import train_test_val_df_no_dirs
 
-JOBS = 1
+JOBS = -1
 
 
-def data(df_raw=DF_NO_DIRECTORS):
-    df = pd.read_csv(df_raw).fillna(0)
-    X_train, X_test, y_train, y_test = train_test_split(
-        df.drop([LABEL_COLUMN], axis=1, errors="ignore").to_numpy(),
-        df[LABEL_COLUMN].to_numpy(),
-        test_size=TRAIN_SIZE,
-        random_state=RANDOM_STATE,
+def data():
+    X_train, X_test, X_validation, y_train, y_test, y_validation = (
+        train_test_val_df_no_dirs()
     )
     X_train = X_train[:, FEATURE_STARTING_INDEX:].astype(np.float64)
     X_test = X_test[:, FEATURE_STARTING_INDEX:].astype(np.float64)
-    return X_train, X_test, y_train, y_test
+    X_validation = X_validation[:, FEATURE_STARTING_INDEX:].astype(np.float64)
+    return X_train, X_test, X_validation, y_train, y_test, y_validation
 
 
 def rf_test_depth(X_train, X_test, y_train, y_test, results_fname):
@@ -72,35 +73,55 @@ def rf_test_depth(X_train, X_test, y_train, y_test, results_fname):
         print(f"RandomForestRegressor,{MSE},{depth}")
 
 
-def rf(results_fname, df=DF_NO_DIRECTORS, depth=15):
-    X_train, X_test, y_train, y_test = data(df)
+def train_rf(depth=15):
+    X_train, _, X_validation, y_train, _, y_validation = data()
     model = RandomForestRegressor(
         max_depth=depth, random_state=RANDOM_STATE, verbose=1, n_jobs=JOBS
     )
-    MSE, r2 = run_model(model, X_train, X_test, y_train, y_test)
+    MSE, r2 = _train_model(model, X_train, X_validation, y_train, y_validation)
     print(f"MSE: {round(MSE, 2)}, R2: {round(r2, 2)}")
-    with open(results_fname, "a") as F:
-        F.write(f"RandomForestRegressor,{MSE},{r2},{depth}\n")
+    with open(f"{SAVED_MODELS_DIR}/rf.pkl", "wb") as F:
+        pickle.dump(model, F)
     return model
 
 
-def svr(results_fname, df=DF_NO_DIRECTORS):
-    X_train, X_test, y_train, y_test = data(df)
+def train_svr():
+    X_train, _, X_validation, y_train, _, y_validation = data()
     degree = 3
     C = 1.0
     epsilon = 0.1
     model = SVR(
         kernel="rbf", degree=degree, C=C, epsilon=epsilon, verbose=True, cache_size=4096
     )
-    MSE, r2 = run_model(model, X_train, X_test, y_train, y_test)
+    MSE, r2 = _train_model(model, X_train, X_validation, y_train, y_validation)
     print(f"MSE: {round(MSE, 2)}, R2: {round(r2, 2)}")
-    with open(results_fname, "a") as F:
-        F.write(f"SVR,{MSE},{r2},{degree},{C},{epsilon}\n")
+    with open(f"{SAVED_MODELS_DIR}/svr.pkl", "wb") as F:
+        pickle.dump(model, F)
     return model
 
 
-def run_model(model, X_train, X_test, y_train, y_test):
+def test(model_type):
+    if model_type == "rf":
+        model_name = "Random Forest"
+    elif model_type == "svr":
+        model_name = "SVR"
+    else:
+        raise ValueError("Model type must be either rf (Random Forest) or svr (SVR)")
+    _, X_test, _, _, y_test, _ = train_test_val_df_no_dirs()
+    with open(f"{SAVED_MODELS_DIR}/{model_type}.pkl", "rb") as F:
+        model = pickle.load(F)
+    mse, r2 = _test_model(model, X_test, y_test)
+    print(f"Results for {model_name}: MSE: {mse}, R2: {r2}")
+    with open(RESULTS_FILE, "a") as F:
+        F.write(f"NoDir,{model_name.replace(" ", "")},{mse},{r2}")
+
+
+def _train_model(model, X_train, X_validation, y_train, y_validation):
     model.fit(X_train, y_train)
+    return _test_model(model, X_validation, y_validation)
+
+
+def _test_model(model, X_test, y_test):
     Y_hat = model.predict(X_test)
     E = y_test - Y_hat
     MSE = mse_V(E)
@@ -109,5 +130,50 @@ def run_model(model, X_train, X_test, y_train, y_test):
 
 
 if __name__ == "__main__":
-    rf(results_fname="results/no_dir/rf.csv")
-    svr(results_fname="results/no_dir/svr.csv")
+    arg_parser = argparse.ArgumentParser()
+    arg_parser.add_argument(
+        "--train",
+        action="store_true",
+        help="Train the specified model(s). If none specified, both Random Forest and SVR are trained",
+    )
+    arg_parser.add_argument(
+        "--test",
+        action="store_true",
+        help="Test the specified model(s). If none specified, both Random Forest and SVR are trained",
+    )
+    arg_parser.add_argument(
+        "--rf",
+        action="store_true",
+        help="Perform specified action only on the Random Forest model",
+    )
+    arg_parser.add_argument(
+        "--svr",
+        action="store_true",
+        help="Perform specified action only on the SVR model",
+    )
+    args = arg_parser.parse_args()
+    if not any([args.train, args.test]):
+        arg_parser.print_help()
+    run_rf = False
+    run_svr = False
+    if not any([args.rf, args.svr]):
+        run_rf = True
+        run_svr = True
+    if args.rf:
+        run_rf = True
+    if args.svr:
+        run_svr = True
+    if args.train:
+        if run_rf:
+            train_rf()
+        if run_svr:
+            train_svr()
+    if args.test:
+        p = pathlib.Path(RESULTS_FILE)
+        if not p.exists():
+            with open(RESULTS_FILE, "w") as F:
+                F.write("Data,Model,MSE,R2,depth\n")
+        if run_rf:
+            test("rf")
+        if run_svr:
+            test("svr")

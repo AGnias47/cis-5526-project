@@ -9,5 +9,5 @@ TRAIN_VAL_SIZE = 0.3
 # Filepaths
 DF_DIRECTORS = "df/df_with_directors.csv"
 DF_NO_DIRECTORS = "df/df_without_directors.csv"
-LINEAR_REGRESSION_MODEL = "bin/main_df_directors_W_3.99.npy"
+RESULTS_FILE = "results/test_results.csv"
 SAVED_MODELS_DIR = "bin"

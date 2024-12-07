@@ -10,7 +10,7 @@ import sys
 import numpy as np
 import pandas as pd
 import torch
-from torch.utils.data import DataLoader, Dataset, random_split
+from torch.utils.data import Dataset
 
 sys.path.append(".")
 from models.constants import (
@@ -18,7 +18,6 @@ from models.constants import (
     DF_NO_DIRECTORS,
     FEATURE_STARTING_INDEX,
     LABEL_COLUMN,
-    RANDOM_STATE,
 )
 
 
@@ -41,29 +40,3 @@ class IMDBDataset(Dataset):
 
     def get_title(self, item):
         return self.X[item, 1]
-
-
-def train_test_val(
-    train_size=0.7, test_size=0.15, val_size=0.15, batch_size=64, directors=False
-):
-    train, test, val = random_split(
-        IMDBDataset(directors),
-        [train_size, test_size, val_size],
-        generator=torch.Generator().manual_seed(RANDOM_STATE),
-    )
-    return (
-        DataLoader(train, batch_size=batch_size),
-        DataLoader(test, batch_size=batch_size),
-        DataLoader(val, batch_size=batch_size),
-    )
-
-
-if __name__ == "__main__":
-    train, test, val = train_test_val()
-    X, Y = next(iter(train))
-    x = next(iter(X))
-    y = next(iter(Y))
-    title = train.dataset.dataset.get_title(0)
-    print(x)
-    print(y)
-    print(title)

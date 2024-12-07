@@ -23,7 +23,7 @@ from torcheval.metrics import MeanSquaredError, R2Score
 
 sys.path.append(".")
 from models.constants import PRECISION, RANDOM_STATE
-from models.imdb_dataloader import train_test_val
+from models.data import train_test_val
 
 BATCH_SIZE = 64
 EPOCHS = 25
