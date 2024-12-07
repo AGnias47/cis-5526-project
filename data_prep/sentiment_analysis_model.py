@@ -1,3 +1,7 @@
+"""
+https://huggingface.co/blog/sentiment-analysis-python
+"""
+
 from transformers import pipeline
 
 class SentimentAnalysisModel:
