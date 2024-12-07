@@ -18,12 +18,12 @@ from torch.optim import Adam
 from torch.optim.lr_scheduler import ExponentialLR
 from rainbow_tqdm import tqdm
 from torcheval.metrics import R2Score
-from imdb_dataset import train_test_val
 
 import sys
 
 sys.path.append(".")
 from models.constants import RANDOM_STATE
+from models.imdb_dataloader import train_test_val
 
 torch.manual_seed(RANDOM_STATE)
 
@@ -32,9 +32,10 @@ class FeedforwardNeuralNetwork(nn.Module):
     def __init__(self):
         super(FeedforwardNeuralNetwork, self).__init__()
         self.fc1 = nn.Linear(in_features=62, out_features=45)
-        self.fc2 = nn.Linear(in_features=45, out_features=12)
-        self.fc3 = nn.Linear(in_features=12, out_features=1)
-        self.alpha = 0.001
+        self.fc2 = nn.Linear(in_features=45, out_features=23)
+        self.fc3 = nn.Linear(in_features=23, out_features=12)
+        self.fc4 = nn.Linear(in_features=12, out_features=1)
+        self.alpha = 0.01
         self.gamma = 0.9
         self.loss_function = nn.MSELoss()
 
@@ -42,6 +43,7 @@ class FeedforwardNeuralNetwork(nn.Module):
         x = F.relu(self.fc1(x))
         x = F.relu(self.fc2(x))
         x = F.relu(self.fc3(x))
+        x = F.relu(self.fc4(x))
         return x
 
     def save(self, filename=None):
@@ -100,7 +102,7 @@ if __name__ == "__main__":
         )
     device = torch.device("cuda")
     model = FeedforwardNeuralNetwork().to(device)
-    train_dataloader, test_dataloader, validation_dataloader = train_test_val()
+    train_dataloader, test_dataloader, validation_dataloader = train_test_val(directors=False, batch_size=64)
     training_loss = train(model, device, train_dataloader, epochs=25)
     print(f"Lowest training loss: {training_loss}")
     mse, r2 = test(model, device, validation_dataloader)

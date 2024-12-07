@@ -1,2 +1,3 @@
-MSE,R2
-1.065,0.367
+Model,Structure,MSE,R2
+FNN,62-45-linear-relu:45-12-linear-relu:12-1-linear-relu,1.065,0.367
+FNN,62-45-linear-relu:45-23-linear-relu:23-12-linear-relu:12-1-linear-relu,1.043,0.380

@@ -41,9 +41,9 @@ class IMDBDataset(Dataset):
         return self.X[item, 1]
 
 
-def train_test_val(train_size=0.7, test_size=0.15, val_size=0.15, batch_size=64):
+def train_test_val(train_size=0.7, test_size=0.15, val_size=0.15, batch_size=64, directors=False):
     train, test, val = random_split(
-        IMDBDataset(),
+        IMDBDataset(directors),
         [train_size, test_size, val_size],
         generator=torch.Generator().manual_seed(RANDOM_STATE),
     )
