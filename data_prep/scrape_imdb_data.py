@@ -1,5 +1,6 @@
 import json
 import pathlib
+from uuid import uuid4
 
 import pandas as pd
 import tqdm
@@ -7,6 +8,9 @@ from bs4 import BeautifulSoup
 
 from limiting_retrying_session import limiting_retrying_session
 from sentiment_analysis_model import SentimentAnalysisModel
+
+DF_DIR = "df"
+
 
 def get_movie_data(imdb_id, session):
     filepath = f"cache/{imdb_id}.json"
@@ -45,7 +49,9 @@ def scrape_imdb_data(df, session, sentiment_analysis_model):
             print(f"Error parsing contentRating for {df.title}: {e}")
             pass
         try:
-            df.loc[i, "sa_desc"] = sentiment_analysis_model.classify(data.get("description"))
+            df.loc[i, "sa_desc"] = sentiment_analysis_model.classify(
+                data.get("description")
+            )
         except Exception as e:
             print(f"Error parsing contentRating for {df.title}: {e}")
             pass
@@ -57,6 +63,6 @@ def scrape_imdb_data(df, session, sentiment_analysis_model):
 if __name__ == "__main__":
     session = limiting_retrying_session()
     sentiment_analysis_model = SentimentAnalysisModel()
-    df = pd.read_csv("df/raw.csv")
+    df = pd.read_csv(f"{DF_DIR}/raw.csv")
     df = scrape_imdb_data(df, session, sentiment_analysis_model)
-    df.to_csv("df.csv")
+    df.to_csv(f"{DF_DIR}/{str(uuid4())}.csv")
