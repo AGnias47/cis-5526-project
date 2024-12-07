@@ -4,7 +4,7 @@ FEATURE_STARTING_INDEX = 2
 LABEL_COLUMN = "imdbAverageRating"
 RANDOM_STATE = 42
 ROWS = 60941
-TRAIN_SIZE = 0.2
+TRAIN_VAL_SIZE = 0.3
 # Dataframes
 DF_DIRECTORS = "df/df_with_directors.csv"
 DF_NO_DIRECTORS = "df/df_without_directors.csv"

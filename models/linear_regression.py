@@ -20,7 +20,7 @@ from models.constants import (
     LINEAR_REGRESSION_MODEL,
     RANDOM_STATE,
     ROWS,
-    TRAIN_SIZE,
+    TRAIN_VAL_SIZE,
 )
 from models.metrics import mse_V
 
@@ -89,46 +89,20 @@ def mini_batch_gradient_descent_linear_regression(
 
 
 def main_df_no_directors():
-    with open("results/no_dir/linear_regression_results.csv", "w") as F:
-        F.write("Model,MSE,R2\n")
     df = pd.read_csv(DF_NO_DIRECTORS).fillna(0)
-    X_train, X_test, y_train, y_test = train_test_split(
+    X_train, X_tv, y_train, y_tv = train_test_split(
         df.drop([LABEL_COLUMN], axis=1, errors="ignore").to_numpy(),
         df[LABEL_COLUMN].to_numpy(),
-        test_size=TRAIN_SIZE,
+        test_size=TRAIN_VAL_SIZE,
         random_state=RANDOM_STATE,
     )
-    W = closed_form_linear_regression(X_train, y_train)
-    mse, r2 = metrics(X_test, y_test, W)
-    print(f"Mean squared error from closed form solution: {mse}")
-    with open("results/no_dir/linear_regression_results.csv", "a") as F:
-        F.write(f"Closed Form,{mse},{r2}\n")
-    W = closed_form_ridge_regression(X_train, y_train, lambda_val=0.8)
-    mse, r2 = metrics(X_test, y_test, W)
-    print(f"Mean squared error from ridge regression: {mse}")
-    with open("results/no_dir/linear_regression_results.csv", "a") as F:
-        F.write(f"Ridge Regression,{mse},{r2}\n")
-    W = gradient_descent_linear_regression(X_train, y_train, epochs=1000, alpha=0.1)
-    mse, r2 = metrics(X_test, y_test, W)
-    print(f"Mean squared error from batch gradient descent linear regression: {mse}")
-    with open("results/no_dir/linear_regression_results.csv", "a") as F:
-        F.write(f"Batch Gradient Descent,{mse},{r2}\n")
-    W = mini_batch_gradient_descent_linear_regression(
-        X_train, y_train, epochs=10, alpha=0.1
+    X_test, X_validation, y_test, y_validation = train_test_split(
+        X_tv,
+        y_tv,
+        test_size=0.5,
+        random_state=RANDOM_STATE,
     )
-    mse, r2 = metrics(X_test, y_test, W)
-    print(
-        f"Mean squared error from mini-batch gradient descent linear regression: {mse}"
-    )
-    with open("results/no_dir/linear_regression_results.csv", "a") as F:
-        F.write(f"Mini-batch GD,{mse},{r2}\n")
-    W = mini_batch_gradient_descent_linear_regression(
-        X_train, y_train, epochs=10, alpha=0.01, batch_size=1
-    )
-    mse, r2 = metrics(X_test, y_test, W)
-    print(f"Mean squared error from SGD linear regression: {mse}")
-    with open("results/no_dir/linear_regression_results.csv", "a") as F:
-        F.write(f"SGD,{mse},{r2}\n")
+    return X_train, X_test, X_validation, y_train, y_test, y_validation
 
 
 def main_df_directors():
@@ -192,8 +166,38 @@ def test_df_directors_model():
         individual_row_test(chunk[271:].fillna(0), W)
         break
 
+def train():
+    X_train, X_test, X_validation, y_train, y_test, y_validation = (
+        main_df_no_directors()
+    )
+    W_closed_form = closed_form_linear_regression(X_train, y_train)
+    W_ridge = closed_form_ridge_regression(X_train, y_train, lambda_val=0.8)
+    W_gd = gradient_descent_linear_regression(X_train, y_train, epochs=1000, alpha=0.1)
+    W_mini_batch = mini_batch_gradient_descent_linear_regression(
+        X_train, y_train, epochs=10, alpha=0.1
+    )
+    W_sgd = mini_batch_gradient_descent_linear_regression(
+        X_train, y_train, epochs=10, alpha=0.01, batch_size=1
+    )
+    for W, train_type in [
+        (W_closed_form, "closed form"),
+        (W_ridge, "ridge regression"),
+        (W_gd, "gradient descent"),
+        (W_mini_batch, "mini batch"),
+        (W_sgd, "stochastic gradient descent")
+    ]:
+        mse, r2 = metrics(X_validation, y_validation, W)
+        print(f"Results for {train_type} linear regression: MSE: {mse}, R2: {r2}")
+        with open(f"bin/W_{train_type}.npy", "wb") as F:
+            np.save(F, W)
+
+def test():
+    with open("results/linear_regression_results.csv", "w") as F:
+        F.write("Data,Model,MSE,R2\n")
+
 
 if __name__ == "__main__":
-    # main_df_no_directors()
-    # main_df_directors()
-    test_df_directors_model()
+    train()
+
+    #main_df_directors()
+    #test_df_directors_model()
