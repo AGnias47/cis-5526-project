@@ -1,3 +1,4 @@
+import argparse
 from math import ceil, floor
 from uuid import uuid4
 
@@ -5,7 +6,6 @@ import numpy as np
 import pandas as pd
 from numpy.linalg import inv
 from rainbow_tqdm import tqdm
-from sklearn.metrics import r2_score
 from sklearn.model_selection import train_test_split
 
 import sys
@@ -20,9 +20,12 @@ from models.constants import (
     LINEAR_REGRESSION_MODEL,
     RANDOM_STATE,
     ROWS,
+    SAVED_MODELS_DIR,
     TRAIN_VAL_SIZE,
 )
-from models.metrics import mse_V
+from models.metrics import mse_r2_V
+
+LINEAR_REGRESSION_RESULTS = "results/linear_regression_results.csv"
 
 
 def closed_form_linear_regression(X_train, y_train):
@@ -42,13 +45,6 @@ def closed_form_ridge_regression(X_train, y_train, lambda_val=0.1):
     XTXI = inv(XTX + LI)
     XTY = np.matmul(XT, y_train)
     return np.matmul(XTXI, XTY)
-
-
-def metrics(X_test, y_test, W):
-    X_test = X_test[:, FEATURE_STARTING_INDEX:].astype(np.float64)
-    Y_hat_test = np.matmul(X_test, W)
-    E_test = y_test - Y_hat_test
-    return mse_V(E_test), r2_score(y_test, Y_hat_test)
 
 
 def gradient_descent_linear_regression(X_train, y_train, epochs=100, alpha=0.1):
@@ -118,7 +114,7 @@ def main_df_directors():
         ):
             df = chunk.fillna(0)
             if epoch < epochs:
-                train_split = floor(df.shape[0] * 0.8)
+                train_split = floor(df.shape[0] * 0.7)
                 X_train = df.drop([LABEL_COLUMN], axis=1, errors="ignore").to_numpy()[
                     0:train_split, :
                 ]
@@ -127,12 +123,16 @@ def main_df_directors():
                     X_train, y_train, epochs=1, alpha=0.1, W=W
                 )
             else:
-                test_split = ceil(df.shape[0] * 0.8)
-                X_test = df.drop([LABEL_COLUMN], axis=1, errors="ignore").to_numpy()[
-                    test_split:, :
+                test_val_split = ceil(df.shape[0] * 0.7)
+                X_test_val = df.drop([LABEL_COLUMN], axis=1, errors="ignore").to_numpy()[
+                    test_val_split:, :
                 ]
-                y_test = df[LABEL_COLUMN].to_numpy()[test_split:]
-                chunk_metrics = metrics(X_test, y_test, W)
+                val_split = ceil(X_test_val.shape[0] * 0.5)
+                X_val = df.drop([LABEL_COLUMN], axis=1, errors="ignore").to_numpy()[
+                             val_split:, :
+                             ]
+                y_val = df[LABEL_COLUMN].to_numpy()[val_split:]
+                chunk_metrics = mse_r2_V(X_val, y_val, W)
                 MSE += chunk_metrics[0]
                 R2 += chunk_metrics[1]
     print(
@@ -166,10 +166,9 @@ def test_df_directors_model():
         individual_row_test(chunk[271:].fillna(0), W)
         break
 
+
 def train():
-    X_train, X_test, X_validation, y_train, y_test, y_validation = (
-        main_df_no_directors()
-    )
+    X_train, _, X_validation, y_train, _, y_validation = main_df_no_directors()
     W_closed_form = closed_form_linear_regression(X_train, y_train)
     W_ridge = closed_form_ridge_regression(X_train, y_train, lambda_val=0.8)
     W_gd = gradient_descent_linear_regression(X_train, y_train, epochs=1000, alpha=0.1)
@@ -184,20 +183,60 @@ def train():
         (W_ridge, "ridge regression"),
         (W_gd, "gradient descent"),
         (W_mini_batch, "mini batch"),
-        (W_sgd, "stochastic gradient descent")
+        (W_sgd, "stochastic gradient descent"),
     ]:
-        mse, r2 = metrics(X_validation, y_validation, W)
+        mse, r2 = mse_r2_V(X_validation, y_validation, W)
         print(f"Results for {train_type} linear regression: MSE: {mse}, R2: {r2}")
         with open(f"bin/W_{train_type}.npy", "wb") as F:
             np.save(F, W)
 
+
 def test():
-    with open("results/linear_regression_results.csv", "w") as F:
+    with open(LINEAR_REGRESSION_RESULTS, "w") as F:
         F.write("Data,Model,MSE,R2\n")
+    _, X_test, _, _, y_test, _ = main_df_no_directors()
+    for train_type in [
+        "closed form",
+        "ridge regression",
+        "gradient descent",
+        "mini batch",
+        "stochastic gradient descent",
+    ]:
+        with open(f"{SAVED_MODELS_DIR}/W_{train_type}.npy", "rb") as F:
+            W = np.load(F)
+        mse, r2 = mse_r2_V(X_test, y_test, W)
+        print(f"Results for {train_type} linear regression: MSE: {mse}, R2: {r2}")
+        with open(LINEAR_REGRESSION_RESULTS, "a") as F:
+            F.write(
+                f"NoDir,LinearRegression{train_type.title().replace(" ", "")},{mse},{r2}"
+            )
 
 
 if __name__ == "__main__":
-    train()
-
-    #main_df_directors()
-    #test_df_directors_model()
+    arg_parser = argparse.ArgumentParser()
+    arg_parser.add_argument("-a", "--all", action="store_true", help="Run all actions")
+    arg_parser.add_argument(
+        "-tr",
+        "--train",
+        action="store_true",
+        help="Train the dataframe without directors",
+    )
+    arg_parser.add_argument(
+        "--test", action="store_true", help="Test the dataframe without directors"
+    )
+    arg_parser.add_argument(
+        "-c",
+        "--chunked",
+        action="store_true",
+        help="Train and test the dataframe with directors",
+    )
+    args = arg_parser.parse_args()
+    if not any([args.all, args.train, args.test, args.chunked]):
+        arg_parser.print_help()
+    if args.all or args.train:
+        train()
+    if args.all or args.test:
+        test()
+    if args.all or args.chunked:
+        main_df_directors()
+        test_df_directors_model()

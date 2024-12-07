@@ -17,13 +17,16 @@ import torch.nn as nn
 from torch.optim import Adam
 from torch.optim.lr_scheduler import ExponentialLR
 from rainbow_tqdm import tqdm
-from torcheval.metrics import R2Score
+from torcheval.metrics import R2Score, MeanSquaredError
 
 import sys
 
 sys.path.append(".")
-from models.constants import RANDOM_STATE
+from models.constants import PRECISION, RANDOM_STATE
 from models.imdb_dataloader import train_test_val
+
+BATCH_SIZE = 64
+EPOCHS = 25
 
 torch.manual_seed(RANDOM_STATE)
 
@@ -74,25 +77,23 @@ def train(model, device, dataloader, epochs=10):
             epoch_loss += loss.item()
         scheduler.step()
         epoch_loss = epoch_loss / len(dataloader)
-        print(f"Epoch {epoch+1} complete. Loss: {round(epoch_loss, 5)}")
+        print(f"Epoch {epoch+1} complete. Loss: {round(epoch_loss, PRECISION)}")
         total_loss.append(epoch_loss)
     return min(total_loss)
 
 
 def test(model, device, dataloader):
     model.eval()
-    mse = 0
+    mse = MeanSquaredError(device=device)
     r2_score = R2Score(device=device)
     with torch.no_grad():
         for X, Y in dataloader:
             X = X.to(device)
             Y = Y.to(device)
             prediction = model(X).flatten()
-            mse += model.loss_function(prediction, Y)
+            mse.update(prediction, Y)
             r2_score.update(prediction, Y)
-    mse = mse / len(dataloader)
-    r2 = r2_score.compute()
-    return mse, r2
+    return mse.compute(), r2_score.compute()
 
 
 if __name__ == "__main__":
@@ -102,8 +103,8 @@ if __name__ == "__main__":
         )
     device = torch.device("cuda")
     model = FeedforwardNeuralNetwork().to(device)
-    train_dataloader, test_dataloader, validation_dataloader = train_test_val(directors=False, batch_size=64)
-    training_loss = train(model, device, train_dataloader, epochs=25)
+    train_dataloader, test_dataloader, validation_dataloader = train_test_val(batch_size=BATCH_SIZE)
+    training_loss = train(model, device, train_dataloader, epochs=EPOCHS)
     print(f"Lowest training loss: {training_loss}")
     mse, r2 = test(model, device, validation_dataloader)
     print(f"MSE: {mse}, R2: {r2}")
