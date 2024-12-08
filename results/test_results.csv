@@ -1,0 +1,10 @@
+Data,Model,MSE,R2
+NoDir,RandomRatingGenerator,8.596616814253,-4.19021276454132
+NoDir,LinearRegressionClosedForm,4.44555,-1.62475
+NoDir,LinearRegressionRidgeRegression,4.45112,-1.62804
+NoDir,LinearRegressionGradientDescent,4.4493,-1.62696
+NoDir,LinearRegressionMiniBatch,4.54581,-1.68394
+NoDir,LinearRegressionStochasticGradientDescent,4.83463,-1.85447
+SentimentDesc,LinearRegressionGradientDescent,4.43741,-1.64103
+SentimentDesc,LinearRegressionMiniBatch,4.52935,-1.69575
+SentimentDesc,LinearRegressionStochasticGradientDescent,4.70433,-1.79989

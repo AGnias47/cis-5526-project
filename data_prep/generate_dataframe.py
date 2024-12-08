@@ -81,7 +81,7 @@ def encode_genres(df):
 
 
 def normalize_numerical_fields(df):
-    for field in ["releaseYear", "runtime"]:
+    for field in ["releaseYear", "runtime", "sa_desc"]:
         df[field] = df[field].apply(lambda r: (r - df[field].mean()) / df[field].std())
     return df
 
@@ -101,6 +101,7 @@ def encode_directors(df):
 def create_no_dirs_df(df, filepath):
     df_no_directors = df.copy(deep=True)
     df_no_directors = df_no_directors.drop(["director"], axis=1, errors="ignore")
+    df_no_directors = df_no_directors.fillna(0)
     df_no_directors.to_csv(filepath)
 
 
@@ -113,10 +114,7 @@ if __name__ == "__main__":
     df = scrape_imdb_data(df, session, sentiment_analysis_model)
     df = df.drop(
         [
-            "Unnamed: 0.3",
-            "Unnamed: 0.2",
-            "Unnamed: 0.1",
-            "Unnamed: 0",
+            "imdbId",
             "availableCountries",
             "type",
         ],
@@ -126,9 +124,11 @@ if __name__ == "__main__":
     df["runtime"] = df["runtime"].apply(lambda x: duration_to_minute(x))
     df = df[df.runtime > 0]
     df = encode_genres(df)
+    df = df.drop("Unnamed: 0", axis=1)
     df = normalize_numerical_fields(df)
     df = encode_content_ratings(df)
     Path(DF_DIR).mkdir(exist_ok=True)
     create_no_dirs_df(df, f"{DF_DIR}/{str(uuid4())[:8]}_no_directors.csv")
     df = encode_directors(df)
+    df = df.fillna(0)
     df.to_csv(f"{DF_DIR}/{str(uuid4())[:8]}_directors.csv")

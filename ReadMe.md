@@ -32,7 +32,7 @@ The model without director data runs linear regression, generating separate mode
 The model with director data only runs using a chunked Mini-batch Gradient Descent model, as this allows the data to be loaded in chunks and not overload a machine's memory.
 
 Models are trained and tested with a script that takes the following arguments:
-* `-t` or `--train` - Train the model. Add `-d` or `--directors` to train the model on the dataset with directors.
+* `--train` - Train the model. Add `-d` or `--directors` to train the model on the dataset with directors.
 * `--test`. Test the saved model. Train must be run first. Add `-d` or `--directors` to test the model trained with directors data.
-* `--sample`. Generate a list of movies with predicted vs. actual ratings on the model with directors data.
+* `-s` or `--sample`. Generate a list of movies with predicted vs. actual ratings on the model with directors data.
 

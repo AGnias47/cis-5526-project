@@ -1,4 +1,5 @@
 import sys
+from pathlib import Path
 
 import numpy as np
 import pandas as pd
@@ -6,7 +7,7 @@ from sklearn.metrics import r2_score
 from sklearn.model_selection import train_test_split
 
 sys.path.append(".")
-from models.constants import DF_NO_DIRECTORS, LABEL_COLUMN, RANDOM_STATE, TRAIN_SIZE
+from models.constants import DF_NO_DIRECTORS, LABEL_COLUMN, RANDOM_STATE, TRAIN_VAL_SIZE, RESULTS_FILE
 
 
 def metrics(Y):
@@ -23,12 +24,15 @@ if __name__ == "__main__":
     _, _, _, y_test = train_test_split(
         df.drop([LABEL_COLUMN], axis=1, errors="ignore").to_numpy(),
         df[LABEL_COLUMN].to_numpy(),
-        test_size=TRAIN_SIZE,
+        test_size=TRAIN_VAL_SIZE / 2,
         random_state=RANDOM_STATE,
     )
     mse, r2 = metrics(y_test)
     print(f"Mean squared error from random rating generator: {mse}")
     print(f"R2 score: {r2}")
-    with open("results/random_rating_generator_results.csv", "w") as F:
-        F.write("Model,MSE,R2\n")
-        F.write(f"Random Rating Generator,{mse},{r2}")
+    p = Path(RESULTS_FILE)
+    if not p.exists():
+        with open(RESULTS_FILE, "w") as F:
+            F.write("Data,Model,MSE,R2\n")
+    with open(RESULTS_FILE, "a") as F:
+        F.write(f"NoDir,RandomRatingGenerator,{mse},{r2}\n")

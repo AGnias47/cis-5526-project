@@ -11,7 +11,13 @@ from sklearn.model_selection import train_test_split
 from torch.utils.data import DataLoader, random_split
 
 sys.path.append(".")
-from models.constants import DF_NO_DIRECTORS, LABEL_COLUMN, RANDOM_STATE, TRAIN_VAL_SIZE
+from models.constants import (
+    DF_NO_DIRECTORS,
+    LABEL_COLUMN,
+    RANDOM_STATE,
+    TRAIN_VAL_SIZE,
+    DF_SA_DESC,
+)
 from models.imdb_dataset import IMDBDataset
 
 
@@ -30,8 +36,12 @@ def train_test_val_dataloaders(
     )
 
 
-def train_test_val_df_no_dirs():
-    df = pd.read_csv(DF_NO_DIRECTORS).fillna(0)
+def train_test_val_df_no_dirs(sa_desc=False):
+    if sa_desc:
+        df_source = DF_SA_DESC
+    else:
+        df_source = DF_NO_DIRECTORS
+    df = pd.read_csv(df_source).fillna(0)
     X_train, X_tv, y_train, y_tv = train_test_split(
         df.drop([LABEL_COLUMN], axis=1, errors="ignore").to_numpy(),
         df[LABEL_COLUMN].to_numpy(),

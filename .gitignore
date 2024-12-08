@@ -167,6 +167,6 @@ cython_debug/
 raw_data/
 backups/
 cache/
-backup.csv
+df/archive/backup.csv
 df/
 bin

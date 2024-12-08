@@ -126,6 +126,28 @@ def train():
             np.save(F, W)
 
 
+def train_sentiment_desc():
+    X_train, _, X_validation, y_train, _, y_validation = train_test_val_df_no_dirs(
+        sa_desc=True
+    )
+    W_gd = gradient_descent_linear_regression(X_train, y_train, epochs=1000, alpha=0.1)
+    W_mini_batch = mini_batch_gradient_descent_linear_regression(
+        X_train, y_train, epochs=10, alpha=0.1
+    )
+    W_sgd = mini_batch_gradient_descent_linear_regression(
+        X_train, y_train, epochs=10, alpha=0.01, batch_size=1
+    )
+    for W, train_type in [
+        (W_gd, "gradient descent"),
+        (W_mini_batch, "mini batch"),
+        (W_sgd, "stochastic gradient descent"),
+    ]:
+        mse, r2 = mse_r2_V(X_validation, y_validation, W)
+        print(f"Results for {train_type} linear regression: MSE: {mse}, R2: {r2}")
+        with open(f"bin/W_{train_type}_sentiment_desc.npy", "wb") as F:
+            np.save(F, W)
+
+
 def train_directors():
     X_test, y_test, W = None, None, None
     epochs = 10
@@ -184,7 +206,28 @@ def test():
         print(f"Results for {train_type} linear regression: MSE: {mse}, R2: {r2}")
         with open(RESULTS_FILE, "a") as F:
             F.write(
-                f"NoDir,LinearRegression{train_type.title().replace(" ", "")},{mse},{r2}"
+                f"NoDir,LinearRegression{train_type.title().replace(" ", "")},{mse},{r2}\n"
+            )
+
+
+def test_sentiment_desc():
+    p = pathlib.Path(RESULTS_FILE)
+    if not p.exists():
+        with open(RESULTS_FILE, "w") as F:
+            F.write("Data,Model,MSE,R2\n")
+    _, X_test, _, _, y_test, _ = train_test_val_df_no_dirs(True)
+    for train_type in [
+        "gradient descent",
+        "mini batch",
+        "stochastic gradient descent",
+    ]:
+        with open(f"{SAVED_MODELS_DIR}/W_{train_type}_sentiment_desc.npy", "rb") as F:
+            W = np.load(F)
+        mse, r2 = mse_r2_V(X_test, y_test, W)
+        print(f"Results for {train_type} linear regression: MSE: {mse}, R2: {r2}")
+        with open(RESULTS_FILE, "a") as F:
+            F.write(
+                f"SentimentDesc,LinearRegression{train_type.title().replace(" ", "")},{mse},{r2}\n"
             )
 
 
@@ -215,13 +258,12 @@ def test_directors():
     r2_total = round(float(R2.compute()), PRECISION)
     print(f"Results for director linear regression: MSE: {mse_total}, R2: {r2_total}")
     with open(RESULTS_FILE, "a") as F:
-        F.write(f"Dir,LinearRegressionChunked,{mse_total},{r2_total}")
+        F.write(f"Dir,LinearRegressionChunked,{mse_total},{r2_total}\n")
 
 
 if __name__ == "__main__":
     arg_parser = argparse.ArgumentParser()
     arg_parser.add_argument(
-        "-tr",
         "--train",
         action="store_true",
         help="Train the dataframe without directors",
@@ -233,10 +275,15 @@ if __name__ == "__main__":
         "-d",
         "--directors",
         action="store_true",
-        help="Include the dataframe with directors. Must be used with train or test",
+        help="Include the dataframe with directors. Must be used with train or test, cannot be used with sentiment",
     )
     arg_parser.add_argument(
         "-s",
+        "--sentiment",
+        action="store_true",
+        help="Include the dataframe with sentiment analysis data on the description. Must be used with train or test, cannot be used with directors",
+    )
+    arg_parser.add_argument(
         "--sample",
         action="store_true",
         help="Run trained model against specific movies and save results",
@@ -244,14 +291,20 @@ if __name__ == "__main__":
     args = arg_parser.parse_args()
     if not any([args.train, args.test, args.sample]):
         arg_parser.print_help()
+    if args.directors and args.sentiment:
+        arg_parser.print_help()
     if args.train:
         if args.directors:
             train_directors()
+        elif args.sentiment:
+            train_sentiment_desc()
         else:
             train()
     if args.test:
         if args.directors:
             test_directors()
+        elif args.sentiment:
+            test_sentiment_desc()
         else:
             test()
     if args.sample:
