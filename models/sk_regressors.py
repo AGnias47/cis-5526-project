@@ -24,9 +24,9 @@ from models.data import train_test_val_df_no_dirs
 JOBS = -1
 
 
-def data():
+def data(sentiment_desc=False):
     X_train, X_test, X_validation, y_train, y_test, y_validation = (
-        train_test_val_df_no_dirs()
+        train_test_val_df_no_dirs(sentiment_desc)
     )
     X_train = X_train[:, FEATURE_STARTING_INDEX:].astype(np.float64)
     X_test = X_test[:, FEATURE_STARTING_INDEX:].astype(np.float64)
@@ -73,20 +73,24 @@ def rf_test_depth(X_train, X_test, y_train, y_test, results_fname):
         print(f"RandomForestRegressor,{MSE},{depth}")
 
 
-def train_rf(depth=15):
-    X_train, _, X_validation, y_train, _, y_validation = data()
+def train_rf(sentiment_desc=False, depth=15):
+    X_train, _, X_validation, y_train, _, y_validation = data(sentiment_desc)
     model = RandomForestRegressor(
         max_depth=depth, random_state=RANDOM_STATE, verbose=1, n_jobs=JOBS
     )
     MSE, r2 = _train_model(model, X_train, X_validation, y_train, y_validation)
-    print(f"MSE: {round(MSE, 2)}, R2: {round(r2, 2)}")
-    with open(f"{SAVED_MODELS_DIR}/rf.pkl", "wb") as F:
+    print(f"RF MSE: {round(MSE, 2)}, R2: {round(r2, 2)}")
+    if sentiment_desc:
+        fname = f"{SAVED_MODELS_DIR}/rf_sentiment.pkl"
+    else:
+        fname = f"{SAVED_MODELS_DIR}/rf.pkl"
+    with open(fname, "wb") as F:
         pickle.dump(model, F)
     return model
 
 
-def train_svr():
-    X_train, _, X_validation, y_train, _, y_validation = data()
+def train_svr(sentiment_desc=False):
+    X_train, _, X_validation, y_train, _, y_validation = data(sentiment_desc)
     degree = 3
     C = 1.0
     epsilon = 0.1
@@ -94,26 +98,34 @@ def train_svr():
         kernel="rbf", degree=degree, C=C, epsilon=epsilon, verbose=True, cache_size=4096
     )
     MSE, r2 = _train_model(model, X_train, X_validation, y_train, y_validation)
-    print(f"MSE: {round(MSE, 2)}, R2: {round(r2, 2)}")
-    with open(f"{SAVED_MODELS_DIR}/svr.pkl", "wb") as F:
+    print(f"SVR MSE: {round(MSE, 2)}, R2: {round(r2, 2)}")
+    if sentiment_desc:
+        fname = f"{SAVED_MODELS_DIR}/svr_sentiment.pkl"
+    else:
+        fname = f"{SAVED_MODELS_DIR}/svr.pkl"
+    with open(fname, "wb") as F:
         pickle.dump(model, F)
     return model
 
 
-def test(model_type):
+def test(model_type, sentiment_desc=False):
     if model_type == "rf":
         model_name = "Random Forest"
     elif model_type == "svr":
         model_name = "SVR"
     else:
         raise ValueError("Model type must be either rf (Random Forest) or svr (SVR)")
-    _, X_test, _, _, y_test, _ = train_test_val_df_no_dirs()
-    with open(f"{SAVED_MODELS_DIR}/{model_type}.pkl", "rb") as F:
+    _, X_test, _, _, y_test, _ = train_test_val_df_no_dirs(sentiment_desc)
+    if sentiment_desc:
+        fname = f"{SAVED_MODELS_DIR}/{model_type}_sentiment.pkl"
+    else:
+        fname = f"{SAVED_MODELS_DIR}/{model_type}.pkl"
+    with open(fname, "rb") as F:
         model = pickle.load(F)
     mse, r2 = _test_model(model, X_test, y_test)
     print(f"Results for {model_name}: MSE: {mse}, R2: {r2}")
     with open(RESULTS_FILE, "a") as F:
-        F.write(f"NoDir,{model_name.replace(" ", "")},{mse},{r2}")
+        F.write(f"NoDir,{model_name.replace(" ", "")},{mse},{r2}\n")
 
 
 def _train_model(model, X_train, X_validation, y_train, y_validation):
@@ -151,9 +163,19 @@ if __name__ == "__main__":
         action="store_true",
         help="Perform specified action only on the SVR model",
     )
+    arg_parser.add_argument(
+        "-s",
+        "--sentiment",
+        action="store_true",
+        help="Use the dataframe with sentiment analysis data on the description.",
+    )
     args = arg_parser.parse_args()
     if not any([args.train, args.test]):
         arg_parser.print_help()
+    if args.sentiment:
+        sentiment_data = True
+    else:
+        sentiment_data = False
     run_rf = False
     run_svr = False
     if not any([args.rf, args.svr]):
@@ -165,15 +187,15 @@ if __name__ == "__main__":
         run_svr = True
     if args.train:
         if run_rf:
-            train_rf()
+            train_rf(sentiment_data)
         if run_svr:
-            train_svr()
+            train_svr(sentiment_data)
     if args.test:
         p = pathlib.Path(RESULTS_FILE)
         if not p.exists():
             with open(RESULTS_FILE, "w") as F:
                 F.write("Data,Model,MSE,R2,depth\n")
         if run_rf:
-            test("rf")
+            test("rf", sentiment_data)
         if run_svr:
-            test("svr")
+            test("svr", sentiment_data)

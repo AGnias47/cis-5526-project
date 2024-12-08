@@ -8,7 +8,7 @@ ROWS = 60941
 TRAIN_VAL_SIZE = 0.3
 # Filepaths
 DF_DIRECTORS = "df/df_with_directors.csv"
-DF_SA_DESC = "df/df_no_directors_sa_desc.csv"
+DF_SENTIMENT_DATA = "df/df_no_directors_sentiment.csv"
 DF_NO_DIRECTORS = "df/df_no_directors.csv"
 RESULTS_FILE = "results/test_results.csv"
 SAVED_MODELS_DIR = "bin"

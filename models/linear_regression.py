@@ -275,13 +275,13 @@ if __name__ == "__main__":
         "-d",
         "--directors",
         action="store_true",
-        help="Include the dataframe with directors. Must be used with train or test, cannot be used with sentiment",
+        help="Use the dataframe with directors. Must be used with train or test, cannot be used with sentiment",
     )
     arg_parser.add_argument(
         "-s",
         "--sentiment",
         action="store_true",
-        help="Include the dataframe with sentiment analysis data on the description. Must be used with train or test, cannot be used with directors",
+        help="Use the dataframe with sentiment analysis data on the description. Must be used with train or test, cannot be used with directors",
     )
     arg_parser.add_argument(
         "--sample",

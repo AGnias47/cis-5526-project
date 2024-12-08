@@ -16,7 +16,7 @@ from models.constants import (
     LABEL_COLUMN,
     RANDOM_STATE,
     TRAIN_VAL_SIZE,
-    DF_SA_DESC,
+    DF_SENTIMENT_DATA,
 )
 from models.imdb_dataset import IMDBDataset
 
@@ -36,9 +36,9 @@ def train_test_val_dataloaders(
     )
 
 
-def train_test_val_df_no_dirs(sa_desc=False):
-    if sa_desc:
-        df_source = DF_SA_DESC
+def train_test_val_df_no_dirs(sentiment_data=False):
+    if sentiment_data:
+        df_source = DF_SENTIMENT_DATA
     else:
         df_source = DF_NO_DIRECTORS
     df = pd.read_csv(df_source).fillna(0)
