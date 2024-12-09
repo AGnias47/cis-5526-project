@@ -115,7 +115,7 @@ def test(model_type, sentiment_desc=False):
         model_name = "SVR"
     else:
         raise ValueError("Model type must be either rf (Random Forest) or svr (SVR)")
-    _, X_test, _, _, y_test, _ = train_test_val_df_no_dirs(sentiment_desc)
+    _, X_test, _, _, y_test, _ = data(sentiment_desc)
     if sentiment_desc:
         fname = f"{SAVED_MODELS_DIR}/{model_type}_sentiment.pkl"
     else:
@@ -124,8 +124,12 @@ def test(model_type, sentiment_desc=False):
         model = pickle.load(F)
     mse, r2 = _test_model(model, X_test, y_test)
     print(f"Results for {model_name}: MSE: {mse}, R2: {r2}")
+    if sentiment_desc:
+        data_type = "SentimentDesc"
+    else:
+        data_type = "NoDir"
     with open(RESULTS_FILE, "a") as F:
-        F.write(f"NoDir,{model_name.replace(" ", "")},{mse},{r2}\n")
+        F.write(f"{data_type},{model_name.replace(" ", "")},{mse},{r2}\n")
 
 
 def _train_model(model, X_train, X_validation, y_train, y_validation):

@@ -8,3 +8,7 @@ NoDir,LinearRegressionStochasticGradientDescent,4.83463,-1.85447
 SentimentDesc,LinearRegressionGradientDescent,4.43741,-1.64103
 SentimentDesc,LinearRegressionMiniBatch,4.52935,-1.69575
 SentimentDesc,LinearRegressionStochasticGradientDescent,4.70433,-1.79989
+NoDir,RandomForest,1.0492551473407337,0.38049697325819487
+NoDir,SVR,1.0327704285963135,0.3902299092204706
+SentimentDesc,RandomForest,1.0836896171113266,0.3550166393976397
+SentimentDesc,SVR,1.081482355406111,0.3563303431093663
