@@ -14,7 +14,6 @@ from torch.utils.data import Dataset
 
 sys.path.append(".")
 from models.constants import (
-    DF_DIRECTORS,
     DF_NO_DIRECTORS,
     DF_SENTIMENT_DATA,
     FEATURE_STARTING_INDEX,
@@ -23,12 +22,8 @@ from models.constants import (
 
 
 class IMDBDataset(Dataset):
-    def __init__(self, directors=False, sentiment=False):
-        if directors and sentiment:
-            raise ValueError("Only 1 of sentiment or directors can be used")
-        if directors:
-            self.df = pd.read_csv(DF_DIRECTORS).fillna(0)
-        elif sentiment:
+    def __init__(self, sentiment=False):
+        if sentiment:
             self.df = pd.read_csv(DF_SENTIMENT_DATA).fillna(0)
         else:
             self.df = pd.read_csv(DF_NO_DIRECTORS).fillna(0)
