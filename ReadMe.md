@@ -36,3 +36,6 @@ Models are trained and tested with a script that takes the following arguments:
 * `--test`. Test the saved model. Train must be run first. Add `-d` or `--directors` to test the model trained with directors data.
 * `-s` or `--sample`. Generate a list of movies with predicted vs. actual ratings on the model with directors data.
 
+## last spot
+
+batched training seemed to work but results are skeptical, confirm we're actually iterating over everything. may have to flatten the test pred check.
