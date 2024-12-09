@@ -18,6 +18,7 @@ from models.constants import (
     TRAIN_VAL_SIZE,
     DF_SENTIMENT_DATA,
 )
+from models.chunked_imdb_dataset import ChunkedIMDBDataset
 from models.imdb_dataset import IMDBDataset
 
 
@@ -29,16 +30,23 @@ def train_test_val_dataloaders(
     directors=False,
     sentiment=False,
 ):
-    train, test, val = random_split(
-        IMDBDataset(directors=directors, sentiment=sentiment),
-        [train_size, test_size, val_size],
-        generator=torch.Generator().manual_seed(RANDOM_STATE),
-    )
-    return (
-        DataLoader(train, batch_size=batch_size),
-        DataLoader(test, batch_size=batch_size),
-        DataLoader(val, batch_size=batch_size),
-    )
+    if directors:
+        return (
+            DataLoader(ChunkedIMDBDataset("train"), batch_size=batch_size),
+            DataLoader(ChunkedIMDBDataset("test"), batch_size=batch_size),
+            DataLoader(ChunkedIMDBDataset("validation"), batch_size=batch_size),
+        )
+    else:
+        train, test, val = random_split(
+            IMDBDataset(sentiment=sentiment),
+            [train_size, test_size, val_size],
+            generator=torch.Generator().manual_seed(RANDOM_STATE),
+        )
+        return (
+            DataLoader(train, batch_size=batch_size),
+            DataLoader(test, batch_size=batch_size),
+            DataLoader(val, batch_size=batch_size),
+        )
 
 
 def train_test_val_df_no_dirs(sentiment_data=False):
