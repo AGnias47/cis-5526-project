@@ -7,10 +7,13 @@ https://pytorch.org/docs/stable/generated/torch.optim.Adam.html
 https://github.com/AGnias47/brats-challenge-cis-5528/blob/main/nn/nnet.py
 https://pytorch.org/torcheval/main/generated/torcheval.metrics.R2Score.html
 https://piexchange.medium.com/decoding-deep-learning-neural-networks-for-regression-part-i-332f1d2fedd5#:~:text=The%20number%20of%20neurons%20in,considered%20a%20deep%20neural%20network.
+https://pytorch.org/tutorials/beginner/saving_loading_models.html
 HW 5/6
 """
 
+import argparse
 import sys
+from pathlib import Path
 from uuid import uuid4
 
 import torch
@@ -22,8 +25,8 @@ from torch.optim.lr_scheduler import ExponentialLR
 from torcheval.metrics import MeanSquaredError, R2Score
 
 sys.path.append(".")
-from models.constants import PRECISION, RANDOM_STATE
-from models.data import train_test_val
+from models.constants import PRECISION, RANDOM_STATE, RESULTS_FILE, SAVED_MODELS_DIR
+from models.data import train_test_val_dataloaders
 
 BATCH_SIZE = 64
 EPOCHS = 25
@@ -58,7 +61,7 @@ class FeedforwardNeuralNetwork(nn.Module):
         self.load_state_dict(torch.load(filename))
 
 
-def train(model, device, dataloader, epochs=10):
+def _train(model, device, dataloader, epochs=10):
     model.train()
     optimizer = Adam(model.parameters(), lr=model.alpha)
     scheduler = ExponentialLR(optimizer, gamma=model.gamma)
@@ -82,7 +85,7 @@ def train(model, device, dataloader, epochs=10):
     return min(total_loss)
 
 
-def test(model, device, dataloader):
+def _test(model, device, dataloader):
     model.eval()
     mse = MeanSquaredError(device=device)
     r2_score = R2Score(device=device)
@@ -96,17 +99,71 @@ def test(model, device, dataloader):
     return mse.compute(), r2_score.compute()
 
 
+def train(device, model, sentiment=False):
+    train_dataloader, _, validation_dataloader = train_test_val_dataloaders(
+        batch_size=BATCH_SIZE, sentiment=sentiment
+    )
+    training_loss = _train(model, device, train_dataloader, epochs=EPOCHS)
+    print(f"Lowest training loss: {training_loss}")
+    if sentiment:
+        fname = f"{SAVED_MODELS_DIR}/nn_sentiment.pth"
+    else:
+        fname = f"{SAVED_MODELS_DIR}/nn.pth"
+    torch.save(model.state_dict(), fname)
+    mse, r2 = _test(model, device, validation_dataloader)
+    print(f"MSE: {mse}, R2: {r2}")
+
+
+def test(device, model, sentiment):
+    if sentiment:
+        fname = f"{SAVED_MODELS_DIR}/nn_sentiment.pth"
+        data_type = "SentimentDesc"
+    else:
+        fname = f"{SAVED_MODELS_DIR}/nn.pth"
+        data_type = "NoDir"
+    model.load_state_dict(torch.load(fname, weights_only=True))
+    _, test_dataloader, _ = train_test_val_dataloaders(
+        batch_size=BATCH_SIZE, sentiment=sentiment
+    )
+    mse, r2 = _test(model, device, test_dataloader)
+    p = Path(RESULTS_FILE)
+    if not p.exists():
+        with open(RESULTS_FILE, "w") as F:
+            F.write("Data,Model,MSE,R2,depth\n")
+    with open(RESULTS_FILE, "a") as F:
+        F.write(f"{data_type},FNN,{mse},{r2}\n")
+
+
 if __name__ == "__main__":
     if not torch.cuda.is_available():
         raise RuntimeError(
             "CUDA not detected; not running Neural Net training without a GPU configured"
         )
+    arg_parser = argparse.ArgumentParser()
+    arg_parser.add_argument(
+        "--train",
+        action="store_true",
+    )
+    arg_parser.add_argument(
+        "--test",
+        action="store_true",
+    )
+    arg_parser.add_argument(
+        "-s",
+        "--sentiment",
+        action="store_true",
+        help="Use the dataframe with sentiment analysis data on the description.",
+    )
+    args = arg_parser.parse_args()
+    if not any([args.train, args.test]):
+        arg_parser.print_help()
+    if args.sentiment:
+        sentiment_data = True
+    else:
+        sentiment_data = False
     device = torch.device("cuda")
     model = FeedforwardNeuralNetwork().to(device)
-    train_dataloader, test_dataloader, validation_dataloader = train_test_val(
-        batch_size=BATCH_SIZE
-    )
-    training_loss = train(model, device, train_dataloader, epochs=EPOCHS)
-    print(f"Lowest training loss: {training_loss}")
-    mse, r2 = test(model, device, validation_dataloader)
-    print(f"MSE: {mse}, R2: {r2}")
+    if args.train:
+        train(device, model, sentiment_data)
+    if args.test:
+        test(device, model, sentiment_data)

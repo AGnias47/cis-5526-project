@@ -22,10 +22,15 @@ from models.imdb_dataset import IMDBDataset
 
 
 def train_test_val_dataloaders(
-    train_size=0.7, test_size=0.15, val_size=0.15, batch_size=64, directors=False
+    train_size=0.7,
+    test_size=0.15,
+    val_size=0.15,
+    batch_size=64,
+    directors=False,
+    sentiment=False,
 ):
     train, test, val = random_split(
-        IMDBDataset(directors),
+        IMDBDataset(directors=directors, sentiment=sentiment),
         [train_size, test_size, val_size],
         generator=torch.Generator().manual_seed(RANDOM_STATE),
     )
