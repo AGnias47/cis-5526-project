@@ -25,7 +25,14 @@ from torch.optim.lr_scheduler import ExponentialLR
 from torcheval.metrics import MeanSquaredError, R2Score
 
 sys.path.append(".")
-from models.constants import PRECISION, RANDOM_STATE, RESULTS_FILE, SAVED_MODELS_DIR
+from models.constants import (
+    PRECISION,
+    RANDOM_STATE,
+    RESULTS_FILE,
+    SAVED_MODELS_DIR,
+    NO_DIR_FEATURES,
+    SENTIMENT_FEATURES,
+)
 from models.data import train_test_val_dataloaders
 
 BATCH_SIZE = 64
@@ -35,9 +42,9 @@ torch.manual_seed(RANDOM_STATE)
 
 
 class FeedforwardNeuralNetwork(nn.Module):
-    def __init__(self):
+    def __init__(self, input_features):
         super(FeedforwardNeuralNetwork, self).__init__()
-        self.fc1 = nn.Linear(in_features=62, out_features=45)
+        self.fc1 = nn.Linear(in_features=input_features, out_features=45)
         self.fc2 = nn.Linear(in_features=45, out_features=23)
         self.fc3 = nn.Linear(in_features=23, out_features=12)
         self.fc4 = nn.Linear(in_features=12, out_features=1)
@@ -99,26 +106,30 @@ def _test(model, device, dataloader):
     return mse.compute(), r2_score.compute()
 
 
-def train(device, model, sentiment=False):
+def train(device, sentiment=False):
     train_dataloader, _, validation_dataloader = train_test_val_dataloaders(
         batch_size=BATCH_SIZE, sentiment=sentiment
     )
-    training_loss = _train(model, device, train_dataloader, epochs=EPOCHS)
-    print(f"Lowest training loss: {training_loss}")
     if sentiment:
+        model = FeedforwardNeuralNetwork(SENTIMENT_FEATURES).to(device)
         fname = f"{SAVED_MODELS_DIR}/nn_sentiment.pth"
     else:
+        model = FeedforwardNeuralNetwork(NO_DIR_FEATURES).to(device)
         fname = f"{SAVED_MODELS_DIR}/nn.pth"
+    training_loss = _train(model, device, train_dataloader, epochs=EPOCHS)
+    print(f"Lowest training loss: {training_loss}")
     torch.save(model.state_dict(), fname)
     mse, r2 = _test(model, device, validation_dataloader)
     print(f"MSE: {mse}, R2: {r2}")
 
 
-def test(device, model, sentiment):
+def test(device, sentiment):
     if sentiment:
+        model = FeedforwardNeuralNetwork(SENTIMENT_FEATURES).to(device)
         fname = f"{SAVED_MODELS_DIR}/nn_sentiment.pth"
         data_type = "SentimentDesc"
     else:
+        model = FeedforwardNeuralNetwork(NO_DIR_FEATURES).to(device)
         fname = f"{SAVED_MODELS_DIR}/nn.pth"
         data_type = "NoDir"
     model.load_state_dict(torch.load(fname, weights_only=True))
@@ -126,6 +137,7 @@ def test(device, model, sentiment):
         batch_size=BATCH_SIZE, sentiment=sentiment
     )
     mse, r2 = _test(model, device, test_dataloader)
+    print(f"MSE: {mse}, R2: {r2}")
     p = Path(RESULTS_FILE)
     if not p.exists():
         with open(RESULTS_FILE, "w") as F:
@@ -162,8 +174,7 @@ if __name__ == "__main__":
     else:
         sentiment_data = False
     device = torch.device("cuda")
-    model = FeedforwardNeuralNetwork().to(device)
     if args.train:
-        train(device, model, sentiment_data)
+        train(device, sentiment_data)
     if args.test:
-        test(device, model, sentiment_data)
+        test(device, sentiment_data)
