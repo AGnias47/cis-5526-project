@@ -7,7 +7,13 @@ from sklearn.metrics import r2_score
 from sklearn.model_selection import train_test_split
 
 sys.path.append(".")
-from models.constants import DF_NO_DIRECTORS, LABEL_COLUMN, RANDOM_STATE, TRAIN_VAL_SIZE, RESULTS_FILE
+from models.constants import (
+    DF_NO_DIRECTORS,
+    LABEL_COLUMN,
+    RANDOM_STATE,
+    RESULTS_FILE,
+    TRAIN_VAL_SIZE,
+)
 
 
 def metrics(Y):

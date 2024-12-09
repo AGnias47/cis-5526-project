@@ -1,8 +1,8 @@
 import json
 import pathlib
 
-from rainbow_tqdm import tqdm
 from bs4 import BeautifulSoup
+from rainbow_tqdm import tqdm
 
 
 def get_movie_data(imdb_id, session):

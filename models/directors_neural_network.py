@@ -25,15 +25,10 @@ from torch.optim.lr_scheduler import ExponentialLR
 from torcheval.metrics import MeanSquaredError, R2Score
 
 sys.path.append(".")
-from models.constants import (
-    PRECISION,
-    RANDOM_STATE,
-    RESULTS_FILE,
-    SAVED_MODELS_DIR,
-)
+from models.constants import PRECISION, RANDOM_STATE, RESULTS_FILE, SAVED_MODELS_DIR
 from models.data import train_test_val_dataloaders
 
-BATCH_SIZE = 64
+BATCH_SIZE = 8
 EPOCHS = 25
 
 torch.manual_seed(RANDOM_STATE)
@@ -42,7 +37,7 @@ torch.manual_seed(RANDOM_STATE)
 class DirectorsFeedforwardNeuralNetwork(nn.Module):
     def __init__(self):
         super(DirectorsFeedforwardNeuralNetwork, self).__init__()
-        self.fc1 = nn.Linear(in_features=63, out_features=45)
+        self.fc1 = nn.Linear(in_features=31237, out_features=45)
         self.fc2 = nn.Linear(in_features=45, out_features=23)
         self.fc3 = nn.Linear(in_features=23, out_features=12)
         self.fc4 = nn.Linear(in_features=12, out_features=1)
@@ -78,7 +73,7 @@ def _train(model, device, dataloader, epochs=10):
             Y = Y.to(device)
             with torch.set_grad_enabled(True):
                 prediction = model(X).flatten()
-                loss = model.loss_function(prediction, Y)
+                loss = model.loss_function(prediction, Y.flatten())
                 optimizer.zero_grad()
                 loss.backward()
                 optimizer.step()

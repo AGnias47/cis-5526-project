@@ -2,24 +2,25 @@
 https://stackoverflow.com/a/20662980/8728749
 """
 
-import sys
 import argparse
 import pathlib
+import sys
 
 import numpy as np
 from sklearn.ensemble import RandomForestRegressor
 from sklearn.svm import SVR
 
 sys.path.append(".")
+import pickle
+
 from models.constants import (
     FEATURE_STARTING_INDEX,
     RANDOM_STATE,
-    SAVED_MODELS_DIR,
     RESULTS_FILE,
+    SAVED_MODELS_DIR,
 )
-import pickle
-from models.metrics import mse_V
 from models.data import train_test_val_df_no_dirs
+from models.metrics import mse_V
 
 JOBS = -1
 

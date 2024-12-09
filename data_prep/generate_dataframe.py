@@ -1,10 +1,10 @@
-import pandas as pd
 from pathlib import Path
 from uuid import uuid4
 
+import pandas as pd
 from limiting_retrying_session import limiting_retrying_session
-from sentiment_analysis_model import SentimentAnalysisModel
 from scrape_imdb_data import scrape_imdb_data
+from sentiment_analysis_model import SentimentAnalysisModel
 
 DF_DIR = "df"
 RAW_DATA_DIR = "raw_data"

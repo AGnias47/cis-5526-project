@@ -4,6 +4,7 @@ https://huggingface.co/blog/sentiment-analysis-python
 
 from transformers import pipeline
 
+
 class SentimentAnalysisModel:
     def __init__(self):
         self.pipeline = pipeline("sentiment-analysis")

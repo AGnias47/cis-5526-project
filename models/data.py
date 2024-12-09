@@ -11,14 +11,14 @@ from sklearn.model_selection import train_test_split
 from torch.utils.data import DataLoader, random_split
 
 sys.path.append(".")
+from models.chunked_imdb_dataset import ChunkedIMDBDataset
 from models.constants import (
     DF_NO_DIRECTORS,
+    DF_SENTIMENT_DATA,
     LABEL_COLUMN,
     RANDOM_STATE,
     TRAIN_VAL_SIZE,
-    DF_SENTIMENT_DATA,
 )
-from models.chunked_imdb_dataset import ChunkedIMDBDataset
 from models.imdb_dataset import IMDBDataset
 
 

@@ -26,11 +26,11 @@ from torcheval.metrics import MeanSquaredError, R2Score
 
 sys.path.append(".")
 from models.constants import (
+    NO_DIR_FEATURES,
     PRECISION,
     RANDOM_STATE,
     RESULTS_FILE,
     SAVED_MODELS_DIR,
-    NO_DIR_FEATURES,
     SENTIMENT_FEATURES,
 )
 from models.data import train_test_val_dataloaders
