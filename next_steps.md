@@ -1,0 +1,2 @@
+- batched training seemed to work but results are skeptical, confirm we're actually iterating over everything. may have to flatten the test pred check.
+- Use sklearn's xgboost
