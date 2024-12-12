@@ -9,6 +9,7 @@ import sys
 import numpy as np
 from sklearn.ensemble import RandomForestRegressor
 from sklearn.svm import SVR
+from xgboost import XGBRegressor
 
 sys.path.append(".")
 import pickle
@@ -109,11 +110,27 @@ def train_svr(sentiment_desc=False):
     return model
 
 
+def train_xgboost(sentiment_desc=False):
+    X_train, _, X_validation, y_train, _, y_validation = data(sentiment_desc)
+    model = XGBRegressor(verbosity=2)
+    MSE, r2 = _train_model(model, X_train, X_validation, y_train, y_validation)
+    print(f"XGBoost MSE: {round(MSE, 2)}, R2: {round(r2, 2)}")
+    if sentiment_desc:
+        fname = f"{SAVED_MODELS_DIR}/xgboost_sentiment.pkl"
+    else:
+        fname = f"{SAVED_MODELS_DIR}/xgboost.pkl"
+    with open(fname, "wb") as F:
+        pickle.dump(model, F)
+    return model
+
+
 def test(model_type, sentiment_desc=False):
     if model_type == "rf":
         model_name = "Random Forest"
     elif model_type == "svr":
         model_name = "SVR"
+    elif model_type == "xgboost":
+        model_name = "XGBoost"
     else:
         raise ValueError("Model type must be either rf (Random Forest) or svr (SVR)")
     _, X_test, _, _, y_test, _ = data(sentiment_desc)
@@ -147,6 +164,8 @@ def _test_model(model, X_test, y_test):
 
 
 if __name__ == "__main__":
+    test("xgboost")
+    exit()
     arg_parser = argparse.ArgumentParser()
     arg_parser.add_argument(
         "--train",
@@ -169,6 +188,11 @@ if __name__ == "__main__":
         help="Perform specified action only on the SVR model",
     )
     arg_parser.add_argument(
+        "--xgboost",
+        action="store_true",
+        help="Perform specified action only on the XG Boost model",
+    )
+    arg_parser.add_argument(
         "-s",
         "--sentiment",
         action="store_true",
@@ -183,18 +207,24 @@ if __name__ == "__main__":
         sentiment_data = False
     run_rf = False
     run_svr = False
-    if not any([args.rf, args.svr]):
+    run_xgboost = False
+    if not any([args.rf, args.svr, args.xgboost]):
         run_rf = True
         run_svr = True
+        run_xgboost = True
     if args.rf:
         run_rf = True
     if args.svr:
         run_svr = True
+    if args.xgboost:
+        run_xgboost = True
     if args.train:
         if run_rf:
             train_rf(sentiment_data)
         if run_svr:
             train_svr(sentiment_data)
+        if run_xgboost:
+            train_xgboost(sentiment_data)
     if args.test:
         p = pathlib.Path(RESULTS_FILE)
         if not p.exists():
@@ -204,3 +234,5 @@ if __name__ == "__main__":
             test("rf", sentiment_data)
         if run_svr:
             test("svr", sentiment_data)
+        if run_xgboost:
+            test("xgboost", sentiment_data)

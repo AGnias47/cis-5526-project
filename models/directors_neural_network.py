@@ -70,10 +70,10 @@ def _train(model, device, dataloader, epochs=10):
         epoch_loss = 0
         for X, Y in dataloader:
             X = X.to(device)
-            Y = Y.to(device)
+            Y = Y.to(device).flatten()
             with torch.set_grad_enabled(True):
                 prediction = model(X).flatten()
-                loss = model.loss_function(prediction, Y.flatten())
+                loss = model.loss_function(prediction, Y)
                 optimizer.zero_grad()
                 loss.backward()
                 optimizer.step()
@@ -92,7 +92,7 @@ def _test(model, device, dataloader):
     with torch.no_grad():
         for X, Y in dataloader:
             X = X.to(device)
-            Y = Y.to(device)
+            Y = Y.to(device).flatten()
             prediction = model(X).flatten()
             mse.update(prediction, Y)
             r2_score.update(prediction, Y)

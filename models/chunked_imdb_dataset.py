@@ -67,9 +67,11 @@ class ChunkedIMDBDataset(Dataset):
                 .astype(np.float64)
             )
             test_split = ceil(X_test_val.shape[0] * 0.5)
-            X = df.drop([LABEL_COLUMN], axis=1, errors="ignore").to_numpy()[
-                test_split:, :
-            ]
+            X = (
+                df.drop([LABEL_COLUMN], axis=1, errors="ignore")
+                .to_numpy()[test_split:, :][:, FEATURE_STARTING_INDEX:]
+                .astype(np.float64)
+            )
             y = df.iloc[:, 3].to_numpy()[test_split:]
         else:
             raise ValueError("Invalid data type specified")
