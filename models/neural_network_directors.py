@@ -48,7 +48,7 @@ torch.manual_seed(RANDOM_STATE)
 class DirectorsFeedforwardNeuralNetwork(nn.Module):
     def __init__(self):
         super(DirectorsFeedforwardNeuralNetwork, self).__init__()
-        self.fc1 = nn.Linear(in_features=31237, out_features=45)
+        self.fc1 = nn.Linear(in_features=31236, out_features=45)
         self.fc2 = nn.Linear(in_features=45, out_features=23)
         self.fc3 = nn.Linear(in_features=23, out_features=12)
         self.fc4 = nn.Linear(in_features=12, out_features=1)
