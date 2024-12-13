@@ -15,7 +15,8 @@ import argparse
 import sys
 from pathlib import Path
 from uuid import uuid4
-
+import pandas as pd
+import numpy as np
 import torch
 import torch.nn as nn
 import torch.nn.functional as F
@@ -25,7 +26,17 @@ from torch.optim.lr_scheduler import ExponentialLR
 from torcheval.metrics import MeanSquaredError, R2Score
 
 sys.path.append(".")
-from models.constants import PRECISION, RANDOM_STATE, RESULTS_FILE, SAVED_MODELS_DIR
+from models.constants import (
+    PRECISION,
+    RANDOM_STATE,
+    RESULTS_FILE,
+    SAVED_MODELS_DIR,
+    DF_DIRECTORS,
+    ROWS,
+    CHUNKS,
+    LABEL_COLUMN,
+    FEATURE_STARTING_INDEX,
+)
 from models.data import train_test_val_dataloaders
 
 BATCH_SIZE = 8
@@ -129,7 +140,35 @@ def test(device):
         F.write(f"Directors,FNN,{mse},{r2}\n")
 
 
+def df_directors_sample():
+    device = torch.device("cuda")
+    model = DirectorsFeedforwardNeuralNetwork().to(device)
+    fname = f"{SAVED_MODELS_DIR}/nn_directors_1.pth"
+    model.load_state_dict(torch.load(fname, weights_only=True))
+    for chunk in pd.read_csv(DF_DIRECTORS, chunksize=ROWS // CHUNKS, header=None):
+        df = chunk.fillna(0)
+        X = (
+            df.drop([LABEL_COLUMN], axis=1, errors="ignore")
+            .to_numpy()[50:100, :][:, FEATURE_STARTING_INDEX:]
+            .astype(np.float64)
+        )
+        X = torch.tensor(X.astype(np.float32))
+        Y = torch.tensor(df[LABEL_COLUMN].to_numpy().astype(np.float32))
+        model.eval()
+        with torch.no_grad():
+            X = X.to(device)
+            Y = Y.to(device).flatten()
+            y_hat_test = model(X).flatten()
+            breakpoint()
+            # print(
+            #    f"{x[1]},{round(y_hat_test, 1)},{y}\n"
+            # )
+        break
+
+
 if __name__ == "__main__":
+    #df_directors_sample()
+    #exit()
     if not torch.cuda.is_available():
         raise RuntimeError(
             "CUDA not detected; not running Neural Net training without a GPU configured"
