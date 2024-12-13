@@ -164,8 +164,6 @@ def _test_model(model, X_test, y_test):
 
 
 if __name__ == "__main__":
-    test("xgboost")
-    exit()
     arg_parser = argparse.ArgumentParser()
     arg_parser.add_argument(
         "--train",
