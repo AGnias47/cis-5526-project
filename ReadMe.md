@@ -35,3 +35,11 @@ Models are trained and tested with a script that takes the following arguments:
 * `--train` - Train the model. Add `-d` or `--directors` to train the model on the dataset with directors.
 * `--test`. Test the saved model. Train must be run first. Add `-d` or `--directors` to test the model trained with directors data.
 * `-s` or `--sample`. Generate a list of movies with predicted vs. actual ratings on the model with directors data.
+
+### Ensemble methods
+
+`--train` or `--test` can be run on `models/sk_regressors.py` for a Random Forest (`--rf`), SVC (`--svc`), or XGBoost algorithm (`--xgboost`). Sentiment data can be added to the dataset with `--sentiment`.
+
+### Neural Network
+
+`--train` or `--test` can be run on `models/neural_network[_directors].py`, optionally with `--sentiment` data on the non-directors script.

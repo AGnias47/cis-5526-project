@@ -1,3 +1,7 @@
+"""
+https://github.com/AGnias47/march-madness/blob/main/helpers/sessions.py
+"""
+
 from requests.adapters import HTTPAdapter, Retry
 from requests_ratelimiter import LimiterSession
 
