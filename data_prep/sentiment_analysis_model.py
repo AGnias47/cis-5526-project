@@ -1,4 +1,8 @@
 """
+Classifies text by Sentiment Analysis
+
+Resources
+---------
 https://huggingface.co/blog/sentiment-analysis-python
 """
 

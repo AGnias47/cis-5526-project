@@ -1,5 +1,9 @@
 """
+Resources
+---------
 https://stackoverflow.com/a/20662980/8728749
+SKLearn Documentation
+XGBoost Documentation
 """
 
 import argparse

@@ -1,4 +1,8 @@
 """
+Creates a Session object with retrying and rate limiting
+
+Source
+------
 https://github.com/AGnias47/march-madness/blob/main/helpers/sessions.py
 """
 

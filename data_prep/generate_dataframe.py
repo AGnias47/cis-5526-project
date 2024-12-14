@@ -1,3 +1,9 @@
+#!/usr/bin/env python
+
+"""
+Creates the Baseline, Director, and Sentiment datasets from the raw data downloaded from Kaggle. See ReadMe for more info
+"""
+
 from pathlib import Path
 from uuid import uuid4
 

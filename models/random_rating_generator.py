@@ -1,3 +1,7 @@
+"""
+Randomly selects a rating from 1-10 for a movie
+"""
+
 import sys
 from pathlib import Path
 

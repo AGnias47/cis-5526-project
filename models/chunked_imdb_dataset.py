@@ -1,4 +1,6 @@
 """
+Resources
+---------
 https://stackoverflow.com/questions/70551454/torch-dataloader-for-large-csv-file-incremental-loading
 """
 
@@ -15,7 +17,6 @@ from models.constants import (
     CHUNKS,
     DF_DIRECTORS,
     FEATURE_STARTING_INDEX,
-    LABEL_COLUMN,
     ROWS,
 )
 
