@@ -75,7 +75,9 @@ Models are trained and tested with the `models/neural_network.py` script that ta
 
 #### Directors data
 
-Models are trained and tested with the `models/neural_network_directors.py` script that takes the following arguments:
+The neural network using directors data has not been refined and this is entirely ineffective. Further hyperparameter tuning needs to be performed for this model to be useful.
+
+The model is trained and tested with the `models/neural_network_directors.py` script that takes the following arguments:
 
 * `--train` - Train the model.
 * `--test`. Test the saved model. Train must be run first for the dataset
