@@ -1,4 +1,0 @@
-Model,depth,crietrion,MSE
-RandomForestRegressor,15,squared_error,1.0278204257432462
-RandomForestRegressor,15,friedman_mse,1.0276938060571663
-RandomForestRegressor,15,poisson,1.029855638567469
