@@ -13,33 +13,69 @@ Predicts IMDB ratings of movies using available metadata via several regression 
   * [HBO Max](https://www.kaggle.com/datasets/octopusteam/full-hbo-max-dataset) - save to `raw_data/max.csv`
   * [Netflix](https://www.kaggle.com/datasets/octopusteam/full-netflix-dataset) - save to `raw_data/netflix.csv`
 * Run `python data_prep/generate_dataframe.py`
+  * This will take about a day to run on first pass, as data is pulled from the IMDB website for each movie
+
+## Datasets
+
+There are three datasets used in this project
+
+* Baseline - Uses features based on Release Year, Content Rating, Runtime, and Genre
+* Sentiment - Same as Baseline, but adds Sentiment Analysis score on movie description
+* Directors - Same as Baseline, but adds Directors as a one-hot encoding. Memory intensive (1.8 GB at rest)
 
 ## Models
 
 All models are trained with a 70-15-15 split between train, validation, and test datasets. Training involves training the model, running the trained model against the validation dataset, and saving the model to an external file. Testing involves loading the model from an external file and running the trained model against the test dataset.
 
-Two separate datasets are used for testing, one with directors data and one without directors data. The dataset with directors data is only trained on a linear regression model, as the data is a 32k+ one-hot encoding, and thus takes significantly longer and significantly more compute resources.
-
 ### Linear Regression
 
-The model without director data runs linear regression, generating separate models for the following methods:
+Implements the following methods:
 * Closed form
 * Closed form Ridge Regression
 * Gradient Descent
 * Mini-batch Gradient Descent
 * Stochastic Gradient Descent
 
-The model with director data only runs using a chunked Mini-batch Gradient Descent model, as this allows the data to be loaded in chunks and not overload a machine's memory.
+The Director dataset only runs using a chunked Mini-batch Gradient Descent model, as this allows the data to be loaded in chunks and not overload a machine's memory. The Sentiment dataset can only be used on the Gradient Descent methods.
 
-Models are trained and tested with a script that takes the following arguments:
-* `--train` - Train the model. Add `-d` or `--directors` to train the model on the dataset with directors.
-* `--test`. Test the saved model. Train must be run first. Add `-d` or `--directors` to test the model trained with directors data.
-* `-s` or `--sample`. Generate a list of movies with predicted vs. actual ratings on the model with directors data.
+Models are trained and tested with the `models/linear_regression.py` script that takes the following arguments:
+* `--directors` - Use the Directors dataset.
+* `--sentiment` - Use the Sentiment datset.
+* `--train` - Train the model. If no dataset specified, use Baseline
+* `--test`. Test the saved model. Train must be run first for the dataset. If no dataset specified, use Baseline
+* `-s` or `--sample`. Generate a list of movies with predicted vs. actual ratings using the model generated from the Directors dataset
 
-### Ensemble methods
+### Ensemble methods / SVM
 
-`--train` or `--test` can be run on `models/sk_regressors.py` for a Random Forest (`--rf`), SVC (`--svc`), or XGBoost algorithm (`--xgboost`). Sentiment data can be added to the dataset with `--sentiment`.
+Uses Scikit and Scikit-adjacent libraries to run regression models. Includes
+
+* Random Forest
+* SVR
+* XG Boost Regressor
+
+Only runs for Baseline and Sentiment datsets. Models are trained and tested with the `models/sk_regressors.py` script that takes the following arguments:
+* `--sentiment` - Use the Sentiment datset.
+* `--train` - Train the model. If no dataset specified, use Baseline
+* `--test`. Test the saved model. Train must be run first for the dataset. If no dataset specified, use Baseline
+* `--rf` - Train or test the Random Forest model
+* `--svr` - Train or test the SVR model
+* `--xgboost` - Train or test the XG Boost model
 
 ### Neural Network
 
-`--train` or `--test` can be run on `models/neural_network[_directors].py`, optionally with `--sentiment` data on the non-directors script.
+Uses a PyTorch Feedforward Neural Network. Hyperparameters are managed directly in each script.
+
+#### Baseline and Sentiment data
+
+Models are trained and tested with the `models/neural_network.py` script that takes the following arguments:
+
+* `--sentiment` - Use the Sentiment datset.
+* `--train` - Train the model. If no dataset specified, use Baseline
+* `--test`. Test the saved model. Train must be run first for the dataset. If no dataset specified, use Baseline
+
+#### Directors data
+
+Models are trained and tested with the `models/neural_network_directors.py` script that takes the following arguments:
+
+* `--train` - Train the model.
+* `--test`. Test the saved model. Train must be run first for the dataset
